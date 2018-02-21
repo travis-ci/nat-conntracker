@@ -44,13 +44,13 @@ def main(sysargs=sys.argv[:]):
 
     for src_item in args.src_ignore_cidrs:
         if src_item == 'private':
-            src_ign = src_ign + Conntracker.PRIVATE_NETS
+            src_ign = (src_ign or ()) + Conntracker.PRIVATE_NETS
             continue
         src_ign = (src_ign or ()) + (IPNetwork(src_item),)
 
     for dst_item in args.dst_ignore_cidrs:
         if dst_item == 'private':
-            dst_ign = dst_ign + Conntracker.PRIVATE_NETS
+            dst_ign = (dst_ign or ()) + Conntracker.PRIVATE_NETS
             continue
         dst_ign = (dst_ign or ()) + (IPNetwork(dst_item),)
 
