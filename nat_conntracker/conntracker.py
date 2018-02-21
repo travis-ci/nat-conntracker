@@ -22,12 +22,13 @@ class Conntracker(object):
     def handle(self, stream):
         FlowParser(self, self._logger).handle_events(stream)
 
-    def log_over_threshold(self, threshold, top_n):
+    def sample(self, threshold, top_n):
         for ((src, dst), count) in self.stats.top(n=top_n):
             if count >= threshold:
                 self._logger.warn('threshold={} src={} dst={} count={}'.format(
                     threshold, src, dst, count
                 ))
+        self.stats.reset()
 
     def handle_flow(self, flow):
         if flow is None:

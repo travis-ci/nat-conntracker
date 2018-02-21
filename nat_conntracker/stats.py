@@ -25,6 +25,14 @@ class Stats(object):
         finally:
             self._lock.release()
 
+    def reset(self):
+        try:
+            self._lock.acquire()
+            self.counter = Counter()
+            self.index = OrderedDict()
+        finally:
+            self._lock.release()
+
     def add(self, src, dst):
         try:
             self._lock.acquire()

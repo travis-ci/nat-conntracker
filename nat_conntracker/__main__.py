@@ -44,7 +44,7 @@ def run_conntracker(ctr, logger, args):
 
     try:
         while True:
-            ctr.log_over_threshold(args.conn_threshold, args.top_n)
+            ctr.sample(args.conn_threshold, args.top_n)
             handle_thread.join(0.1)
             if not handle_thread.is_alive():
                 break
@@ -52,7 +52,7 @@ def run_conntracker(ctr, logger, args):
     except KeyboardInterrupt:
         logger.warn('interrupt')
     finally:
-        ctr.log_over_threshold(args.conn_threshold, args.top_n)
+        ctr.sample(args.conn_threshold, args.top_n)
         handle_thread.join()
 
 
@@ -71,7 +71,7 @@ def build_argument_parser(env):
         type=int, default=int(
             env.get(
                 'NAT_CONNTRACKER_CONN_THRESHOLD',
-                env.get('CONN_THRESHOLD', 500)
+                env.get('CONN_THRESHOLD', 100)
             )
         ),
         help='connection count threshold for message logging'
@@ -109,7 +109,7 @@ def build_argument_parser(env):
         type=int, default=int(
             env.get(
                 'NAT_CONNTRACKER_EVAL_INTERVAL',
-                env.get('EVAL_INTERVAL', 5)
+                env.get('EVAL_INTERVAL', 60)
             )
         ),
         help='interval at which stats will be evaluated'
