@@ -1,0 +1,10 @@
+[Unit]
+Description=NAT Conntracker
+
+[Service]
+ExecStart=/usr/local/bin/nat-conntracker-wrapper
+Restart=always
+WorkingDirectory=/
+
+[Install]
+WantedBy=multi-user.target

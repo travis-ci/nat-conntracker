@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+set -o errexit
+set -o pipefail
+
+main() {
+  eval "$(__loadenv)"
+  conntrack -o xml -E conntrack | nat-conntracker -
+}
+
+__loadenv() {
+  : "${ETC_DEFAULT:=/etc/default}"
+
+  for config_file in \
+    nat-conntracker \
+    nat-conntracker-cloud-init \
+    nat-conntracker-local; do
+    if [ -f "${ETC_DEFAULT}/${config_file}" ]; then
+      sed "s/^export //;s/\"//g;s/'//g" "${ETC_DEFAULT}/${config_file}"
+    fi
+  done
+}
+
+main "$@"
