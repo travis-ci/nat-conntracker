@@ -2,3 +2,4 @@ netaddr
 
 flake8
 pytest
+pytest-runner

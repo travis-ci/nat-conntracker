@@ -5,4 +5,5 @@ python:
 install: pip install -r requirements.txt
 script:
 - git ls-files '*.py' | xargs flake8
-- pytest
+- python setup.py install
+- python setup.py pytest
