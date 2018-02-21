@@ -1,6 +1,6 @@
 from netaddr import IPAddress
 
-from nat_conntracker.conntracker import Conntracker, PRIVATE_NETS
+from nat_conntracker.conntracker import Conntracker
 
 
 def test_conntracker_init():
@@ -10,9 +10,9 @@ def test_conntracker_init():
 
 
 def test_private_nets():
-    assert len(PRIVATE_NETS) > 0
+    assert len(Conntracker.PRIVATE_NETS) > 0
     covers_local = False
-    for net in PRIVATE_NETS:
+    for net in Conntracker.PRIVATE_NETS:
         if IPAddress('10.10.0.99') in net:
             covers_local = True
     assert covers_local

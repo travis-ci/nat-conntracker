@@ -7,16 +7,24 @@ import time
 
 from threading import Thread
 
-from .conntracker import Conntracker, PRIVATE_NETS
-from .logger import get_logger
+from netaddr import IPNetwork
+
+from .conntracker import Conntracker
+
+
+__all__ = ['main']
 
 
 def main(sysargs=sys.argv[:]):
     parser = build_argument_parser(os.environ)
     args = parser.parse_args(sysargs[1:])
 
+    logging_level = logging.INFO
+    if args.debug:
+        logging_level = logging.DEBUG
+
     logging_args = dict(
-        level=logging.INFO,
+        level=logging_level,
         format='time=%(asctime)s level=%(levelname)s %(message)s',
         datefmt='%Y-%m-%dT%H:%M:%S%z'
     )
@@ -25,11 +33,17 @@ def main(sysargs=sys.argv[:]):
         logging_args['filename'] = args.log_file
 
     logging.basicConfig(**logging_args)
-    logger = get_logger()
+    logger = logging.getLogger(__name__)
 
-    ignore = PRIVATE_NETS
+    ignore = Conntracker.PRIVATE_NETS
     if args.include_privnets:
         ignore = ()
+
+    for item in args.ignore_cidrs:
+        if item == 'private':
+            ignore = ignore + Conntracker.PRIVATE_NETS
+            continue
+        ignore = ignore + (IPNetwork(item),)
 
     ctr = Conntracker(logger, max_size=args.max_stats_size, ignore=ignore)
     run_conntracker(ctr, logger, args)
@@ -123,8 +137,20 @@ def build_argument_parser(env):
         help='interval at which stats will be evaluated'
     )
     parser.add_argument(
+        '-C', '--ignore-cidrs',
+        action='append', default=list(
+            filter(lambda s: s.strip() != '', [
+                s.strip() for s in env.get(
+                    'NAT_CONNTRACKER_IGNORE_CIDRS',
+                    env.get('IGNORE_CIDRS', '127.0.0.1/32')
+                ).split(',')
+            ])
+        ),
+        help='CIDR notation of addrs/nets to ignore'
+    )
+    parser.add_argument(
         '-P', '--include-privnets',
-        action='store_true', default=asbool(
+        action='store_true', default=_asbool(
             env.get(
                 'NAT_CONNTRACKER_INCLUDE_PRIVNETS',
                 env.get('INCLUDE_PRIVNETS', False)
@@ -132,11 +158,21 @@ def build_argument_parser(env):
         ),
         help='include private networks when handling flows'
     )
+    parser.add_argument(
+        '-D', '--debug',
+        action='store_true', default=_asbool(
+            env.get(
+                'NAT_CONNTRACKER_DEBUG',
+                env.get('DEBUG', False)
+            )
+        ),
+        help='enable debug logging'
+    )
 
     return parser
 
 
-def asbool(value):
+def _asbool(value):
     return str(value).lower().strip() in ('1', 'yes', 'on', 'true')
 
 

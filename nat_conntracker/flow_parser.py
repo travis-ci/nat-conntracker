@@ -3,6 +3,9 @@ from xml.dom.minidom import parseString as minidom_parse_string
 from xml.parsers.expat import ExpatError
 
 
+__all__ = ['FlowParser']
+
+
 class FlowParser(object):
     def __init__(self, conntracker, logger):
         self._conntracker = conntracker
@@ -55,10 +58,10 @@ class FlowMetaOrigReply(object):
         inst = cls()
         inst.direction = meta_node.getAttribute('direction')
         inst.src = FlowAddress(
-            find_data(meta_node, 'src'), find_data(meta_node, 'sport')
+            _find_data(meta_node, 'src'), _find_data(meta_node, 'sport')
         )
         inst.dst = FlowAddress(
-            find_data(meta_node, 'dst'), find_data(meta_node, 'dport')
+            _find_data(meta_node, 'dst'), _find_data(meta_node, 'dport')
         )
         return inst
 
@@ -78,7 +81,7 @@ class FlowMetaIndependent(object):
     @classmethod
     def from_node(cls, meta_node):
         inst = cls()
-        inst.id = find_data(meta_node, 'id')
+        inst.id = _find_data(meta_node, 'id')
         if len(meta_node.getElementsByTagName('assured')) > 0:
             inst.assured = True
         return inst
@@ -107,22 +110,22 @@ class Flow(object):
         inst = cls()
         inst.flowtype = flow_node.getAttribute('type')
         for meta_node in flow_node.getElementsByTagName('meta'):
-            inst.meta.append(meta_from_node(meta_node))
+            inst.meta.append(cls.meta_from_node(meta_node))
         return inst
 
+    @staticmethod
+    def meta_from_node(meta_node):
+        return {
+            'original': FlowMetaOrigReply,
+            'reply': FlowMetaOrigReply,
+            'independent': FlowMetaIndependent
+        }.get(
+            meta_node.getAttribute('direction'),
+            FlowMetaGeneric
+        ).from_node(meta_node)
 
-def meta_from_node(meta_node):
-    return {
-        'original': FlowMetaOrigReply,
-        'reply': FlowMetaOrigReply,
-        'independent': FlowMetaIndependent
-    }.get(
-        meta_node.getAttribute('direction'),
-        FlowMetaGeneric
-    ).from_node(meta_node)
 
-
-def find_data(node, parent_tag, default=''):
+def _find_data(node, parent_tag, default=''):
     for subnode in node.getElementsByTagName(parent_tag):
         if subnode.firstChild is not None:
             return subnode.firstChild.data

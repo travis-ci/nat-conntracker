@@ -2,11 +2,17 @@ PACKAGE := nat_conntracker
 EXEC_PREFIX ?= /usr/local
 CONFIG_PREFIX ?= /etc
 
+TESTDATA := tests/data/conntrack-events-sample.xml
+
 .PHONY: all
 all: deps lint test
 
+.PHONY: clean
+clean:
+	rm -f $(TESTDATA)
+
 .PHONY: deps
-deps:
+deps: $(TESTDATA)
 	pip install -r requirements.txt
 
 .PHONY: lint
@@ -30,3 +36,6 @@ sysinstall: install
 	cp -v ./misc/nat-conntracker.service $(CONFIG_PREFIX)/systemd/system/nat-conntracker.service
 	cp -v ./misc/nat-conntracker-wrapper $(EXEC_PREFIX)/bin/nat-conntracker-wrapper
 	systemctl enable nat-conntracker
+
+tests/data/conntrack-events-sample.xml: tests/data/conntrack-events-sample.xml.bz2
+	bzcat $^ >$@
