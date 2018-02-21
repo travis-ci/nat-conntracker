@@ -17,7 +17,8 @@ def main(sysargs=sys.argv[:]):
 
     logging_args = dict(
         level=logging.INFO,
-        format='%(asctime)s %(levelname)s: %(message)s'
+        format='time=%(asctime)s level=%(levelname)s %(message)s',
+        datefmt='%Y-%m-%dT%H:%M:%S%z'
     )
 
     if args.log_file:
