@@ -44,7 +44,12 @@ def run_conntracker(ctr, logger, args):
     handle_thread.start()
 
     try:
-        logger.info('entering sample loop')
+        logger.info(
+            'entering sample loop '
+            'threshold={} top_n={} eval_interval={}'.format(
+                args.conn_threshold, args.top_n, args.eval_interval
+            )
+        )
         while True:
             ctr.sample(args.conn_threshold, args.top_n)
             handle_thread.join(0.1)
