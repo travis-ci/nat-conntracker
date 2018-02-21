@@ -47,6 +47,13 @@ class Conntracker(object):
         if flow is None:
             return
 
+        if flow.flowtype != 'new':
+            self._logger.debug('skipping flowtype={}'.format(flow.flowtype))
+            # Only "new" flows are currently handled, meaning that any flows
+            # of type "update" or "destroy" are ignored along with any of the
+            # state changes they may describe.
+            return
+
         (src, dst) = flow.src_dst()
         if src is None or dst is None:
             self._logger.debug('skipping flow without src dst')
