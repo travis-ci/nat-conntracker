@@ -35,17 +35,27 @@ def main(sysargs=sys.argv[:]):
     logging.basicConfig(**logging_args)
     logger = logging.getLogger(__name__)
 
-    ignore = Conntracker.PRIVATE_NETS
+    src_ign = None
+    dst_ign = None
     if args.include_privnets:
-        ignore = ()
+        src_ign = ()
+        dst_ign = ()
 
-    for item in args.ignore_cidrs:
-        if item == 'private':
-            ignore = ignore + Conntracker.PRIVATE_NETS
+    for src_item in args.src_ignore_cidrs:
+        if src_item == 'private':
+            src_ign = src_ign + Conntracker.PRIVATE_NETS
             continue
-        ignore = ignore + (IPNetwork(item),)
+        src_ign = src_ign + (IPNetwork(src_item),)
 
-    ctr = Conntracker(logger, max_size=args.max_stats_size, ignore=ignore)
+    for dst_item in args.dst_ignore_cidrs:
+        if dst_item == 'private':
+            dst_ign = dst_ign + Conntracker.PRIVATE_NETS
+            continue
+        dst_ign = dst_ign + (IPNetwork(dst_item),)
+
+    ctr = Conntracker(
+        logger, max_size=args.max_stats_size, src_ign=src_ign, dst_ign=dst_ign
+    )
     run_conntracker(ctr, logger, args)
     return 0
 
@@ -137,16 +147,28 @@ def build_argument_parser(env):
         help='interval at which stats will be evaluated'
     )
     parser.add_argument(
-        '-C', '--ignore-cidrs',
+        '-s', '--src-ignore-cidrs',
         action='append', default=list(
             filter(lambda s: s.strip() != '', [
                 s.strip() for s in env.get(
-                    'NAT_CONNTRACKER_IGNORE_CIDRS',
-                    env.get('IGNORE_CIDRS', '127.0.0.1/32')
+                    'NAT_CONNTRACKER_SRC_IGNORE_CIDRS',
+                    env.get('SRC_IGNORE_CIDRS', '127.0.0.1/32')
                 ).split(',')
             ])
         ),
-        help='CIDR notation of addrs/nets to ignore'
+        help='CIDR notation of source addrs/nets to ignore'
+    )
+    parser.add_argument(
+        '-d', '--dst-ignore-cidrs',
+        action='append', default=list(
+            filter(lambda s: s.strip() != '', [
+                s.strip() for s in env.get(
+                    'NAT_CONNTRACKER_DST_IGNORE_CIDRS',
+                    env.get('DST_IGNORE_CIDRS', '127.0.0.1/32')
+                ).split(',')
+            ])
+        ),
+        help='CIDR notation of destination addrs/nets to ignore'
     )
     parser.add_argument(
         '-P', '--include-privnets',

@@ -57,7 +57,7 @@ def test_run_events_sample(capsys):
     args.events = open(
         os.path.join(HERE, 'data', 'conntrack-events-sample.xml'), 'r'
     )
-    ctr = Conntracker(logger, ignore=())
+    ctr = Conntracker(logger, src_ign=(), dst_ign=())
     run_conntracker(ctr, logger, args)
 
     stream_handler.flush()

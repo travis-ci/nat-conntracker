@@ -16,9 +16,10 @@ class Conntracker(object):
         IPNetwork('192.168.0.0/16'),
     )
 
-    def __init__(self, logger, max_size=1000, ignore=None):
+    def __init__(self, logger, max_size=1000, src_ign=None, dst_ign=None):
         self._logger = logger
-        self.ignore = ignore if ignore is not None else self.PRIVATE_NETS
+        self.src_ign = src_ign if src_ign is not None else self.PRIVATE_NETS
+        self.dst_ign = dst_ign if dst_ign is not None else self.PRIVATE_NETS
         self.stats = Stats(max_size=max_size)
 
     def handle(self, stream):
@@ -54,10 +55,21 @@ class Conntracker(object):
         src_addr = IPAddress(src.host)
         dst_addr = IPAddress(dst.host)
 
-        for ign in self.ignore:
+        for ign in self.dst_ign:
             if dst_addr in ign:
                 self._logger.debug(
-                    'ignoring src={} dst={}'.format(src_addr, dst_addr)
+                    'ignoring dst match src={} dst={}'.format(
+                        src_addr, dst_addr
+                    )
+                )
+                return
+
+        for ign in self.src_ign:
+            if src_addr in ign:
+                self._logger.debug(
+                    'ignoring src match src={} dst={}'.format(
+                        src_addr, dst_addr
+                    )
                 )
                 return
 
