@@ -44,6 +44,7 @@ def run_conntracker(ctr, logger, args):
     handle_thread.start()
 
     try:
+        logger.info('entering sample loop')
         while True:
             ctr.sample(args.conn_threshold, args.top_n)
             handle_thread.join(0.1)
@@ -53,6 +54,7 @@ def run_conntracker(ctr, logger, args):
     except KeyboardInterrupt:
         logger.warn('interrupt')
     finally:
+        logger.info('cleaning up')
         ctr.sample(args.conn_threshold, args.top_n)
         handle_thread.join()
 
