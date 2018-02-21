@@ -1,3 +1,5 @@
 import logging
 
-LOGGER = logging.getLogger(__name__)
+
+def get_logger():
+    return logging.getLogger(__name__)

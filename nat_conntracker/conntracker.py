@@ -2,7 +2,6 @@ from netaddr import IPNetwork, IPAddress
 
 from .stats import Stats
 from .flow_parser import FlowParser
-from .logger import LOGGER
 
 
 PRIVATE_NETS = (
@@ -15,17 +14,18 @@ PRIVATE_NETS = (
 
 
 class Conntracker(object):
-    def __init__(self, max_size=1000, ignore=PRIVATE_NETS):
+    def __init__(self, logger, max_size=1000, ignore=PRIVATE_NETS):
+        self._logger = logger
         self.ignore = ignore
         self.stats = Stats(max_size=max_size)
 
     def handle(self, stream):
-        FlowParser(self).handle_events(stream)
+        FlowParser(self, self._logger).handle_events(stream)
 
     def log_over_threshold(self, threshold, top_n):
         for ((src, dst), count) in self.stats.top(n=top_n):
             if count >= threshold:
-                LOGGER.warn('threshold={} src={} dst={} count={}'.format(
+                self._logger.warn('threshold={} src={} dst={} count={}'.format(
                     threshold, src, dst, count
                 ))
 
@@ -47,4 +47,4 @@ class Conntracker(object):
         try:
             self.stats.add(src, dst)
         except Exception as exc:
-            LOGGER.error(exc)
+            self._logger.error(exc)

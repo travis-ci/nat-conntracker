@@ -2,12 +2,11 @@ from collections import namedtuple
 from xml.dom.minidom import parseString as minidom_parse_string
 from xml.parsers.expat import ExpatError
 
-from .logger import LOGGER
-
 
 class FlowParser(object):
-    def __init__(self, conntracker):
+    def __init__(self, conntracker, logger):
         self._conntracker = conntracker
+        self._logger = logger
 
     def handle_events(self, stream):
         for line in stream:
@@ -18,7 +17,7 @@ class FlowParser(object):
                         Flow.from_node(flow_node)
                     )
             except ExpatError as experr:
-                LOGGER.debug('expat error: {}'.format(experr))
+                self._logger.debug('expat error: {}'.format(experr))
 
 
 FlowAddress = namedtuple('FlowAddress', ['host', 'port'])

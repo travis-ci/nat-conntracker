@@ -1,5 +1,6 @@
-netaddr
+netaddr>=0.7
 
-flake8
-pytest
-pytest-runner
+flake8>=3.5
+pytest>=3.4
+pytest-cov>=2.0
+pytest-runner>=4.0
