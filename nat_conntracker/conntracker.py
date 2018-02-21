@@ -87,3 +87,26 @@ class Conntracker(object):
             self.stats.add(src, dst)
         except Exception as exc:
             self._logger.error(exc)
+
+    def dump_state(self, *_):
+        for i, ign in enumerate(self.src_ign):
+            self._logger.info(
+                'src_ign dump {}/{} net={}'.format(
+                    i + 1, len(self.src_ign), ign
+                )
+            )
+
+        for i, ign in enumerate(self.dst_ign):
+            self._logger.info(
+                'dst_ign dump {}/{} net={}'.format(
+                    i + 1, len(self.dst_ign), ign
+                )
+            )
+
+        self._logger.info('stats max_size={}'.format(self.stats.max_size))
+        for i, ((src, dst), count) in enumerate(self.stats.top(10)):
+            self._logger.info(
+                'stats dump {}/10 src={} dst={} count={}'.format(
+                    i + 1, src, dst, count
+                )
+            )

@@ -2,6 +2,7 @@
 import argparse
 import logging
 import os
+import signal
 import sys
 import time
 
@@ -45,13 +46,13 @@ def main(sysargs=sys.argv[:]):
         if src_item == 'private':
             src_ign = src_ign + Conntracker.PRIVATE_NETS
             continue
-        src_ign = src_ign + (IPNetwork(src_item),)
+        src_ign = (src_ign or ()) + (IPNetwork(src_item),)
 
     for dst_item in args.dst_ignore_cidrs:
         if dst_item == 'private':
             dst_ign = dst_ign + Conntracker.PRIVATE_NETS
             continue
-        dst_ign = dst_ign + (IPNetwork(dst_item),)
+        dst_ign = (dst_ign or ()) + (IPNetwork(dst_item),)
 
     ctr = Conntracker(
         logger, max_size=args.max_stats_size, src_ign=src_ign, dst_ign=dst_ign
@@ -68,6 +69,7 @@ def run_conntracker(ctr, logger, args):
     handle_thread.start()
 
     try:
+        signal.signal(signal.SIGUSR1, ctr.dump_state)
         logger.info(
             'entering sample loop '
             'threshold={} top_n={} eval_interval={}'.format(
@@ -83,6 +85,7 @@ def run_conntracker(ctr, logger, args):
     except KeyboardInterrupt:
         logger.warn('interrupt')
     finally:
+        signal.signal(signal.SIGUSR1, signal.SIG_IGN)
         logger.info('cleaning up')
         ctr.sample(args.conn_threshold, args.top_n)
         handle_thread.join()
