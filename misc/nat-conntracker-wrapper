@@ -3,7 +3,9 @@ set -o errexit
 set -o pipefail
 
 main() {
+  set -o allexport
   eval "$(__loadenv)"
+  set +o allexport
   conntrack -o xml -E conntrack | nat-conntracker -
 }
 
@@ -15,7 +17,7 @@ __loadenv() {
     nat-conntracker-cloud-init \
     nat-conntracker-local; do
     if [ -f "${ETC_DEFAULT}/${config_file}" ]; then
-      sed "s/^export //;s/\"//g;s/'//g" "${ETC_DEFAULT}/${config_file}"
+      cat "${ETC_DEFAULT}/${config_file}"
     fi
   done
 }
