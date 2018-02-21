@@ -55,7 +55,7 @@ class Conntracker(object):
         dst_addr = IPAddress(dst.host)
 
         for ign in self.ignore:
-            if src_addr in ign or dst_addr in ign:
+            if dst_addr in ign:
                 self._logger.debug(
                     'ignoring src={} dst={}'.format(src_addr, dst_addr)
                 )
