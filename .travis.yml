@@ -7,6 +7,3 @@ script:
 - make lint
 - make install
 - make test
-- git ls-files '*.py' | xargs flake8
-- python setup.py install
-- pytest --cov=nat_conntracker tests/
