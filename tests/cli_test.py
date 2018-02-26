@@ -1,12 +1,14 @@
 import logging
 import os
+import sys
 
-from io import BytesIO
+from io import BytesIO, StringIO
 
 from nat_conntracker.conntracker import Conntracker
 from nat_conntracker.__main__ import build_argument_parser, run_conntracker
 
 
+ISPY2 = sys.version_info.major == 2
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 
@@ -40,7 +42,7 @@ class FakeArgs(object):
 
 
 def test_run_events_sample(capsys):
-    tmpio = BytesIO()
+    tmpio = BytesIO() if ISPY2 else StringIO()
 
     logger = logging.getLogger(__name__)
     logger.level = logging.DEBUG

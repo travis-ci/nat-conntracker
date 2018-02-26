@@ -3,5 +3,7 @@
 .eggs/
 .pytest_cache/
 .venv/
+.venv2/
+.venv3/
 dist/
 tests/data/*.xml
