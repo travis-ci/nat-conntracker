@@ -11,6 +11,7 @@ from threading import Thread
 from netaddr import IPNetwork
 
 from .conntracker import Conntracker
+from .null_syncer import NullSyncer
 
 
 __all__ = ['main']
@@ -36,6 +37,13 @@ def main(sysargs=sys.argv[:]):
     logging.basicConfig(**logging_args)
     logger = logging.getLogger(__name__)
 
+    syncer = NullSyncer()
+    if args.redis_url != '':
+        from .redis_syncer import RedisSyncer
+        syncer = RedisSyncer(
+            logger, args.sync_channel, conn_url=args.redis_url
+        )
+
     src_ign = None
     dst_ign = None
     if args.include_privnets:
@@ -55,18 +63,20 @@ def main(sysargs=sys.argv[:]):
         dst_ign = (dst_ign or ()) + (IPNetwork(dst_item),)
 
     ctr = Conntracker(
-        logger, max_size=args.max_stats_size, src_ign=src_ign, dst_ign=dst_ign
+        logger, syncer,
+        max_size=args.max_stats_size, src_ign=src_ign, dst_ign=dst_ign
     )
-    run_conntracker(ctr, logger, args)
+    run_conntracker(ctr, logger, syncer, args)
     return 0
 
 
-def run_conntracker(ctr, logger, args):
-    handle_thread = Thread(
-        target=ctr.handle,
-        args=(args.events,)
-    )
+def run_conntracker(ctr, logger, syncer, args):
+    handle_thread = Thread(target=ctr.handle, args=(args.events,))
     handle_thread.start()
+
+    sub_thread = Thread(target=syncer.sub)
+    sub_thread.daemon = True
+    sub_thread.start()
 
     try:
         signal.signal(signal.SIGUSR1, ctr.dump_state)
@@ -138,6 +148,22 @@ def build_argument_parser(env):
             env.get('LOG_FILE', '')
         ),
         help='optional separate file for logging'
+    )
+    parser.add_argument(
+        '-R', '--redis-url',
+        default=env.get(
+            'NAT_CONNTRACKER_REDIS_URL',
+            env.get('REDIS_URL', '')
+        ),
+        help='redis URL for syncing conntracker'
+    )
+    parser.add_argument(
+        '-C', '--sync-channel',
+        default=env.get(
+            'NAT_CONNTRACKER_SYNC_CHANNEL',
+            env.get('SYNC_CHANNEL', 'nat-conntracker:sync')
+        ),
+        help='redis channel name to use for syncing'
     )
     parser.add_argument(
         '-I', '--eval-interval',

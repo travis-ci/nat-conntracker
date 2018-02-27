@@ -16,8 +16,9 @@ class Conntracker(object):
         IPNetwork('192.168.0.0/16'),
     )
 
-    def __init__(self, logger, max_size=1000, src_ign=None, dst_ign=None):
+    def __init__(self, logger, syncer, max_size=1000, src_ign=None, dst_ign=None):
         self._logger = logger
+        self._syncer = syncer
         self.src_ign = src_ign if src_ign is not None else self.PRIVATE_NETS
         self.dst_ign = dst_ign if dst_ign is not None else self.PRIVATE_NETS
         self.stats = Stats(max_size=max_size)
@@ -37,6 +38,7 @@ class Conntracker(object):
                         threshold, src, dst, count
                     )
                 )
+                self._syncer.pub(threshold, src, dst, count)
 
         self.stats.reset()
         self._logger.info(

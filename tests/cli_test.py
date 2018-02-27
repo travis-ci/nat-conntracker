@@ -4,8 +4,9 @@ import sys
 
 from io import BytesIO, StringIO
 
-from nat_conntracker.conntracker import Conntracker
 from nat_conntracker.__main__ import build_argument_parser, run_conntracker
+from nat_conntracker.conntracker import Conntracker
+from nat_conntracker.null_syncer import NullSyncer
 
 
 ISPY2 = sys.version_info.major == 2
@@ -59,8 +60,9 @@ def test_run_events_sample(capsys):
     args.events = open(
         os.path.join(HERE, 'data', 'conntrack-events-sample.xml'), 'r'
     )
-    ctr = Conntracker(logger, src_ign=(), dst_ign=())
-    run_conntracker(ctr, logger, args)
+    syncer = NullSyncer()
+    ctr = Conntracker(logger, syncer, src_ign=(), dst_ign=())
+    run_conntracker(ctr, logger, syncer, args)
 
     stream_handler.flush()
     tmpio.flush()
