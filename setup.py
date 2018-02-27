@@ -27,7 +27,8 @@ def main():
             'pytest-runner>=4.0'
         ],
         install_requires=[
-            'netaddr>=0.7'
+            'netaddr>=0.7',
+            'redis>=2.10'
         ],
         tests_require=[
             'flake8>=3.5',

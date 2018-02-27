@@ -4,7 +4,7 @@ from nat_conntracker.conntracker import Conntracker
 
 
 def test_conntracker_init():
-    ctr = Conntracker(None)
+    ctr = Conntracker(None, None)
     assert ctr.src_ign is not None
     assert ctr.dst_ign is not None
     assert ctr.stats is not None

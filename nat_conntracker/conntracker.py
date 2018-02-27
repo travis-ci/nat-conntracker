@@ -13,11 +13,14 @@ class Conntracker(object):
         IPNetwork('127.0.0.0/8'),
         IPNetwork('169.254.0.0/16'),
         IPNetwork('172.16.0.0/12'),
+        IPNetwork('192.0.2.0/24'),
         IPNetwork('192.168.0.0/16'),
     )
 
-    def __init__(self, logger, max_size=1000, src_ign=None, dst_ign=None):
+    def __init__(self, logger, syncer,
+                 max_size=1000, src_ign=None, dst_ign=None):
         self._logger = logger
+        self._syncer = syncer
         self.src_ign = src_ign if src_ign is not None else self.PRIVATE_NETS
         self.dst_ign = dst_ign if dst_ign is not None else self.PRIVATE_NETS
         self.stats = Stats(max_size=max_size)
@@ -37,6 +40,7 @@ class Conntracker(object):
                         threshold, src, dst, count
                     )
                 )
+                self._syncer.pub(threshold, src, dst, count)
 
         self.stats.reset()
         self._logger.info(
