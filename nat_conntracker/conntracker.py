@@ -13,6 +13,7 @@ class Conntracker(object):
         IPNetwork('127.0.0.0/8'),
         IPNetwork('169.254.0.0/16'),
         IPNetwork('172.16.0.0/12'),
+        IPNetwork('192.0.2.0/24'),
         IPNetwork('192.168.0.0/16'),
     )
 
