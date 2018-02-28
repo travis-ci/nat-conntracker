@@ -42,5 +42,5 @@ class RedisSyncer(object):
                 ('over threshold={threshold} src={src} dst={dst} '
                  'count={count} source=sync').format(**msg)
             )
-        except Exception as exc:
+        except Exception:
             self._logger.exception('failed to handle message')
