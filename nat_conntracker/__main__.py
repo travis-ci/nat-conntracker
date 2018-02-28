@@ -71,10 +71,30 @@ def main(sysargs=sys.argv[:]):
 
 
 def run_conntracker(ctr, logger, syncer, args):
-    handle_thread = Thread(target=ctr.handle, args=(args.events,))
+    wait_state = {'done': False}
+
+    def done():
+        wait_state['done'] = True
+
+    def handle_wrap():
+        try:
+            ctr.handle(args.events)
+        except Exception:
+            logger.exception('breaking out of handle wrap')
+        finally:
+            done()
+
+    def sub_wrap():
+        try:
+            syncer.sub()
+        except Exception:
+            logger.exception('breaking out of sub wrap')
+            done()
+
+    handle_thread = Thread(target=handle_wrap)
     handle_thread.start()
 
-    sub_thread = Thread(target=syncer.sub)
+    sub_thread = Thread(target=sub_wrap)
     sub_thread.daemon = True
     sub_thread.start()
 
@@ -89,7 +109,7 @@ def run_conntracker(ctr, logger, syncer, args):
         while True:
             ctr.sample(args.conn_threshold, args.top_n)
             handle_thread.join(0.1)
-            if not handle_thread.is_alive():
+            if not handle_thread.is_alive() or wait_state['done']:
                 break
             time.sleep(args.eval_interval)
     except KeyboardInterrupt:
