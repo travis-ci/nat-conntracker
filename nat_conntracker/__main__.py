@@ -62,63 +62,89 @@ def main(sysargs=sys.argv[:]):
             continue
         dst_ign = (dst_ign or ()) + (IPNetwork(dst_item),)
 
-    ctr = Conntracker(
+    syncer.ping()
+    conntracker = Conntracker(
         logger, syncer,
         max_size=args.max_stats_size, src_ign=src_ign, dst_ign=dst_ign
     )
-    run_conntracker(ctr, logger, syncer, args)
+    run_conntracker(conntracker, logger, syncer, args)
     return 0
 
 
-def run_conntracker(ctr, logger, syncer, args):
-    wait_state = {'done': False}
+class RunState(object):
 
-    def done():
-        wait_state['done'] = True
+    def __init__(self, conntracker, events, syncer, logger):
+        self.conntracker = conntracker
+        self.events = events
+        self.syncer = syncer
+        self._logger = logger
+        self._done = False
 
-    def handle_wrap():
+    def done(self):
+        self._done = True
+
+    def is_done(self):
+        return self._done
+
+    def handle(self):
         try:
-            ctr.handle(args.events)
+            self.conntracker.handle(self.events, is_done=self.is_done)
         except Exception:
-            logger.exception('breaking out of handle wrap')
+            self._logger.exception('breaking out of handle wrap')
         finally:
-            done()
+            self.done()
 
-    def sub_wrap():
+    def sub(self):
         try:
-            syncer.sub()
+            self.syncer.sub(is_done=self.is_done)
         except Exception:
-            logger.exception('breaking out of sub wrap')
-            done()
+            self._logger.exception('breaking out of sub wrap')
+            self.done()
 
-    handle_thread = Thread(target=handle_wrap)
+
+def run_conntracker(conntracker, logger, syncer, args):
+    state = RunState(
+        conntracker=conntracker, events=args.events,
+        syncer=syncer, logger=logger
+    )
+
+    handle_thread = Thread(target=state.handle)
     handle_thread.start()
 
-    sub_thread = Thread(target=sub_wrap)
+    sub_thread = Thread(target=state.sub)
     sub_thread.daemon = True
     sub_thread.start()
 
     try:
-        signal.signal(signal.SIGUSR1, ctr.dump_state)
+        signal.signal(signal.SIGUSR1, conntracker.dump_state)
         logger.info(
             'entering sample loop '
             'threshold={} top_n={} eval_interval={}'.format(
                 args.conn_threshold, args.top_n, args.eval_interval
             )
         )
-        while True:
-            ctr.sample(args.conn_threshold, args.top_n)
-            handle_thread.join(0.1)
-            if not handle_thread.is_alive() or wait_state['done']:
-                break
-            time.sleep(args.eval_interval)
+        _run_sample_loop(state, handle_thread, conntracker, args)
     except KeyboardInterrupt:
         logger.warn('interrupt')
     finally:
         signal.signal(signal.SIGUSR1, signal.SIG_IGN)
         logger.info('cleaning up')
-        ctr.sample(args.conn_threshold, args.top_n)
+        conntracker.sample(args.conn_threshold, args.top_n)
         handle_thread.join()
+
+
+def _run_sample_loop(state, handle_thread, conntracker, args):
+    while True:
+        conntracker.sample(args.conn_threshold, args.top_n)
+        nextloop = time.time() + args.eval_interval
+        while time.time() < nextloop:
+            handle_thread.join(0.1)
+            if not handle_thread.is_alive():
+                state.done()
+                return
+            if state.is_done():
+                return
+            time.sleep(0.1)
 
 
 def build_argument_parser(env):

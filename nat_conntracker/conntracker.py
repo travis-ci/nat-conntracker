@@ -25,8 +25,8 @@ class Conntracker(object):
         self.dst_ign = dst_ign if dst_ign is not None else self.PRIVATE_NETS
         self.stats = Stats(max_size=max_size)
 
-    def handle(self, stream):
-        FlowParser(self, self._logger).handle_events(stream)
+    def handle(self, stream, is_done=None):
+        FlowParser(self, self._logger).handle_events(stream, is_done=is_done)
 
     def sample(self, threshold, top_n):
         self._logger.info(

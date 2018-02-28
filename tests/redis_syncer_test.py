@@ -59,7 +59,7 @@ def test_redis_syncer_sub(syncer, monkeypatch):
         return mpsconn
 
     monkeypatch.setattr(syncer._conn, 'pubsub', mock_pubsub)
-    syncer.sub(done=(lambda: True))
+    syncer.sub(is_done=(lambda: True))
 
     assert mpsconn.subscriptions is not None
     assert mpsconn.subscriptions[syncer._channel] is not None

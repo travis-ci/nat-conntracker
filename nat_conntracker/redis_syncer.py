@@ -25,12 +25,13 @@ class RedisSyncer(object):
             })
         )
 
-    def sub(self, interval=0.01, done=None):
+    def sub(self, interval=0.01, is_done=None):
+        is_done = is_done if is_done is not None else lambda: False
         psconn = self._conn.pubsub(ignore_subscribe_messages=True)
         psconn.subscribe(**{self._channel: self._handle_message})
         while True:
             psconn.get_message()
-            if done is not None and done():
+            if is_done():
                 break
             time.sleep(interval)
 
@@ -46,3 +47,6 @@ class RedisSyncer(object):
             )
         except Exception:
             self._logger.exception('failed to handle message')
+
+    def ping(self):
+        self._conn.ping()
