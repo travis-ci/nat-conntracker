@@ -25,11 +25,13 @@ class RedisSyncer(object):
             })
         )
 
-    def sub(self, interval=0.01):
+    def sub(self, interval=0.01, done=None):
         psconn = self._conn.pubsub(ignore_subscribe_messages=True)
         psconn.subscribe(**{self._channel: self._handle_message})
         while True:
             psconn.get_message()
+            if done is not None and done():
+                break
             time.sleep(interval)
 
     def _handle_message(self, message):
