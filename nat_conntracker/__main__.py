@@ -67,98 +67,9 @@ def main(sysargs=sys.argv[:]):
         logger, syncer,
         max_size=args.max_stats_size, src_ign=src_ign, dst_ign=dst_ign
     )
-    run_conntracker(conntracker, logger, syncer, args)
+
+    RunState(conntracker, syncer, logger, args).run()
     return 0
-
-
-class RunState(object):
-
-    def __init__(self, conntracker, events, syncer, logger):
-        self.conntracker = conntracker
-        self.events = events
-        self.syncer = syncer
-        self._logger = logger
-        self._done = False
-        self._handle_thread = None
-        self._sub_thread = None
-
-    def start(self):
-        self._handle_thread = Thread(target=self._handle)
-        self._handle_thread.start()
-
-        self._sub_thread = Thread(target=self._sub)
-        self._sub_thread.daemon = True
-        self._sub_thread.start()
-
-    def join(self):
-        self._handle_thread.join(0.1)
-
-    def is_alive(self):
-        return self._handle_thread.is_alive()
-
-    def done(self):
-        self._done = True
-
-    def is_done(self):
-        return self._done
-
-    def _handle(self):
-        try:
-            self.conntracker.handle(self.events, is_done=self.is_done)
-        except Exception:
-            self._logger.exception('breaking out of handle wrap')
-        finally:
-            self.done()
-
-    def _sub(self):
-        try:
-            self.syncer.sub(is_done=self.is_done)
-        except Exception:
-            self._logger.exception('breaking out of sub wrap')
-            self.done()
-
-
-def run_conntracker(conntracker, logger, syncer, args):
-    state = RunState(
-        conntracker=conntracker, events=args.events,
-        syncer=syncer, logger=logger
-    )
-    state.start()
-
-    try:
-        signal.signal(signal.SIGUSR1, conntracker.dump_state)
-        logger.info(
-            'entering sample loop '
-            'threshold={} top_n={} eval_interval={}'.format(
-                args.conn_threshold, args.top_n, args.eval_interval
-            )
-        )
-        _run_sample_loop(
-            state, conntracker, args.conn_threshold, args.top_n,
-            args.eval_interval
-        )
-    except KeyboardInterrupt:
-        logger.warn('interrupt')
-    finally:
-        signal.signal(signal.SIGUSR1, signal.SIG_IGN)
-        logger.info('cleaning up')
-        state.done()
-        conntracker.sample(args.conn_threshold, args.top_n)
-        state.join()
-
-
-def _run_sample_loop(state, conntracker, conn_threshold, top_n, eval_interval):
-    while True:
-        conntracker.sample(conn_threshold, top_n)
-        nextloop = time.time() + eval_interval
-        while time.time() < nextloop:
-            state.join()
-            if not state.is_alive():
-                state.done()
-                return
-            if state.is_done():
-                return
-            time.sleep(0.1)
 
 
 def build_argument_parser(env):
@@ -285,6 +196,89 @@ def build_argument_parser(env):
 
 def _asbool(value):
     return str(value).lower().strip() in ('1', 'yes', 'on', 'true')
+
+
+class RunState(object):
+
+    def __init__(self, conntracker, syncer, logger, args):
+        self._conntracker = conntracker
+        self._syncer = syncer
+        self._logger = logger
+        self._args = args
+        self._done = False
+        self._handle_thread = None
+        self._sub_thread = None
+
+    def run(self):
+        self._start_threads()
+
+        try:
+            signal.signal(signal.SIGUSR1, self._conntracker.dump_state)
+            self._logger.info(
+                'entering sample loop '
+                'threshold={} top_n={} eval_interval={}'.format(
+                    self._args.conn_threshold, self._args.top_n,
+                    self._args.eval_interval
+                )
+            )
+            self._run_sample_loop()
+        except KeyboardInterrupt:
+            self._logger.warn('interrupt')
+        finally:
+            signal.signal(signal.SIGUSR1, signal.SIG_IGN)
+            self._logger.info('cleaning up')
+            self._done = True
+            self._conntracker.sample(
+                self._args.conn_threshold, self._args.top_n
+            )
+            self._join()
+
+    def _run_sample_loop(self):
+        while True:
+            self._conntracker.sample(
+                self._args.conn_threshold, self._args.top_n
+            )
+            nextloop = time.time() + self._args.eval_interval
+            while time.time() < nextloop:
+                self._join()
+                if not self._is_alive():
+                    self._done = True
+                    return
+                if self._is_done():
+                    return
+                time.sleep(0.1)
+
+    def _start_threads(self):
+        self._handle_thread = Thread(target=self._handle)
+        self._handle_thread.start()
+
+        self._sub_thread = Thread(target=self._sub)
+        self._sub_thread.daemon = True
+        self._sub_thread.start()
+
+    def _join(self):
+        self._handle_thread.join(0.1)
+
+    def _is_alive(self):
+        return self._handle_thread.is_alive()
+
+    def _is_done(self):
+        return self._done
+
+    def _handle(self):
+        try:
+            self._conntracker.handle(self._args.events, is_done=self._is_done)
+        except Exception:
+            self._logger.exception('breaking out of handle wrap')
+        finally:
+            self._done = True
+
+    def _sub(self):
+        try:
+            self._syncer.sub(is_done=self._is_done)
+        except Exception:
+            self._logger.exception('breaking out of sub wrap')
+            self._done = True
 
 
 if __name__ == '__main__':
