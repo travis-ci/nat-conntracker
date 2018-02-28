@@ -79,6 +79,22 @@ class RunState(object):
         self.syncer = syncer
         self._logger = logger
         self._done = False
+        self._handle_thread = None
+        self._sub_thread = None
+
+    def start(self):
+        self._handle_thread = Thread(target=self._handle)
+        self._handle_thread.start()
+
+        self._sub_thread = Thread(target=self._sub)
+        self._sub_thread.daemon = True
+        self._sub_thread.start()
+
+    def join(self):
+        self._handle_thread.join(0.1)
+
+    def is_alive(self):
+        return self._handle_thread.is_alive()
 
     def done(self):
         self._done = True
@@ -86,7 +102,7 @@ class RunState(object):
     def is_done(self):
         return self._done
 
-    def handle(self):
+    def _handle(self):
         try:
             self.conntracker.handle(self.events, is_done=self.is_done)
         except Exception:
@@ -94,7 +110,7 @@ class RunState(object):
         finally:
             self.done()
 
-    def sub(self):
+    def _sub(self):
         try:
             self.syncer.sub(is_done=self.is_done)
         except Exception:
@@ -107,13 +123,7 @@ def run_conntracker(conntracker, logger, syncer, args):
         conntracker=conntracker, events=args.events,
         syncer=syncer, logger=logger
     )
-
-    handle_thread = Thread(target=state.handle)
-    handle_thread.start()
-
-    sub_thread = Thread(target=state.sub)
-    sub_thread.daemon = True
-    sub_thread.start()
+    state.start()
 
     try:
         signal.signal(signal.SIGUSR1, conntracker.dump_state)
@@ -123,23 +133,27 @@ def run_conntracker(conntracker, logger, syncer, args):
                 args.conn_threshold, args.top_n, args.eval_interval
             )
         )
-        _run_sample_loop(state, handle_thread, conntracker, args)
+        _run_sample_loop(
+            state, conntracker, args.conn_threshold, args.top_n,
+            args.eval_interval
+        )
     except KeyboardInterrupt:
         logger.warn('interrupt')
     finally:
         signal.signal(signal.SIGUSR1, signal.SIG_IGN)
         logger.info('cleaning up')
+        state.done()
         conntracker.sample(args.conn_threshold, args.top_n)
-        handle_thread.join()
+        state.join()
 
 
-def _run_sample_loop(state, handle_thread, conntracker, args):
+def _run_sample_loop(state, conntracker, conn_threshold, top_n, eval_interval):
     while True:
-        conntracker.sample(args.conn_threshold, args.top_n)
-        nextloop = time.time() + args.eval_interval
+        conntracker.sample(conn_threshold, top_n)
+        nextloop = time.time() + eval_interval
         while time.time() < nextloop:
-            handle_thread.join(0.1)
-            if not handle_thread.is_alive():
+            state.join()
+            if not state.is_alive():
                 state.done()
                 return
             if state.is_done():
