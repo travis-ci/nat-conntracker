@@ -4,7 +4,7 @@ import sys
 
 from io import BytesIO, StringIO
 
-from nat_conntracker.__main__ import build_argument_parser, run_conntracker
+from nat_conntracker.__main__ import build_argument_parser, RunState
 from nat_conntracker.conntracker import Conntracker
 from nat_conntracker.null_syncer import NullSyncer
 
@@ -62,7 +62,7 @@ def test_run_events_sample(capsys):
     )
     syncer = NullSyncer()
     ctr = Conntracker(logger, syncer, src_ign=(), dst_ign=())
-    run_conntracker(ctr, logger, syncer, args)
+    RunState(ctr, syncer, logger, args).run()
 
     stream_handler.flush()
     tmpio.flush()

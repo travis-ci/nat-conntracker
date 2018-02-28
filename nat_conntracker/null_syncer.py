@@ -15,3 +15,6 @@ class NullSyncer(object):
     def sub(self, **__):
         while True:
             time.sleep(10)
+
+    def ping(self):
+        pass

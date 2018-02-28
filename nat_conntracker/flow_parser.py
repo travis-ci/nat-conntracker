@@ -11,7 +11,8 @@ class FlowParser(object):
         self._conntracker = conntracker
         self._logger = logger
 
-    def handle_events(self, stream):
+    def handle_events(self, stream, is_done=None):
+        is_done = is_done if is_done is not None else lambda: False
         for line in stream:
             try:
                 dom = minidom_parse_string(line)
@@ -21,6 +22,10 @@ class FlowParser(object):
                     )
             except ExpatError as experr:
                 self._logger.debug('expat error: {}'.format(experr))
+            finally:
+                self._logger.debug('checking is_done={}'.format(is_done()))
+                if is_done():
+                    return
 
 
 FlowAddress = namedtuple('FlowAddress', ['host', 'port'])
