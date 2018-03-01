@@ -9,5 +9,7 @@ script:
 - make lint
 - make install
 - make test
+after_success:
+- codecov
 notifications:
   email: false
