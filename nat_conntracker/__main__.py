@@ -14,6 +14,22 @@ from .runner import Runner
 __all__ = ['main']
 
 
+ARG_DEFAULTS = {
+    'conn_threshold': 100,
+    'debug': False,
+    'dst_ignore_cidrs': ('127.0.0.1/32',),
+    'eval_interval': 60,
+    'events': sys.stdin,
+    'include_privnets': False,
+    'log_file': '',
+    'max_stats_size': 1000,
+    'redis_url': '',
+    'src_ignore_cidrs': ('127.0.0.1/32',),
+    'sync_channel': 'nat-conntracker:sync',
+    'top_n': 10,
+}
+
+
 def main(sysargs=sys.argv[:]):
     parser = build_argument_parser(os.environ)
     args = parser.parse_args(sysargs[1:])
@@ -24,20 +40,7 @@ def main(sysargs=sys.argv[:]):
 
 
 def build_runner(**kwargs):
-    args = {
-        'conn_threshold': 100,
-        'debug': False,
-        'dst_ignore_cidrs': ('127.0.0.1/32',),
-        'eval_interval': 60,
-        'events': sys.stdin,
-        'include_privnets': False,
-        'log_file': None,
-        'max_stats_size': 1000,
-        'redis_url': '',
-        'src_ignore_cidrs': ('127.0.0.1/32',),
-        'sync_channel': 'nat-conntracker:sync',
-        'top_n': 10,
-    }
+    args = ARG_DEFAULTS.copy()
     args.update(kwargs)
 
     logging_level = logging.INFO
@@ -57,7 +60,7 @@ def build_runner(**kwargs):
     logger = logging.getLogger(__name__)
 
     syncer = NullSyncer()
-    if args.get('redis_url', '') != '':
+    if args.get('redis_url', ''):
         from .redis_syncer import RedisSyncer
         syncer = RedisSyncer(
             logger, args['sync_channel'], conn_url=args['redis_url']
@@ -90,14 +93,14 @@ def build_runner(**kwargs):
     return Runner(conntracker, syncer, logger, **dict(args))
 
 
-def build_argument_parser(env):
+def build_argument_parser(env, defaults=ARG_DEFAULTS):
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
 
     parser.add_argument(
         'events', nargs='?', type=argparse.FileType('r'),
-        default=sys.stdin,
+        default=defaults['events'],
         help='input event XML stream or filename'
     )
     parser.add_argument(
@@ -105,7 +108,7 @@ def build_argument_parser(env):
         type=int, default=int(
             env.get(
                 'NAT_CONNTRACKER_CONN_THRESHOLD',
-                env.get('CONN_THRESHOLD', 100)
+                env.get('CONN_THRESHOLD', defaults['conn_threshold'])
             )
         ),
         help='connection count threshold for message logging'
@@ -115,7 +118,7 @@ def build_argument_parser(env):
         default=int(
             env.get(
                 'NAT_CONNTRACKER_TOP_N',
-                env.get('TOP_N', 10)
+                env.get('TOP_N', defaults['top_n'])
             )
         ),
         type=int, help='periodically sample the top n counted connections'
@@ -125,7 +128,7 @@ def build_argument_parser(env):
         type=int, default=int(
             env.get(
                 'NAT_CONNTRACKER_MAX_STATS_SIZE',
-                env.get('MAX_STATS_SIZE', 1000)
+                env.get('MAX_STATS_SIZE', defaults['max_stats_size'])
             )
         ),
         help='max number of src=>dst:dport counters to track'
@@ -134,7 +137,7 @@ def build_argument_parser(env):
         '-l', '--log-file',
         default=env.get(
             'NAT_CONNTRACKER_LOG_FILE',
-            env.get('LOG_FILE', '')
+            env.get('LOG_FILE', defaults['log_file'])
         ),
         help='optional separate file for logging'
     )
@@ -142,7 +145,7 @@ def build_argument_parser(env):
         '-R', '--redis-url',
         default=env.get(
             'NAT_CONNTRACKER_REDIS_URL',
-            env.get('REDIS_URL', '')
+            env.get('REDIS_URL', defaults['redis_url'])
         ),
         help='redis URL for syncing conntracker'
     )
@@ -150,7 +153,7 @@ def build_argument_parser(env):
         '-C', '--sync-channel',
         default=env.get(
             'NAT_CONNTRACKER_SYNC_CHANNEL',
-            env.get('SYNC_CHANNEL', 'nat-conntracker:sync')
+            env.get('SYNC_CHANNEL', defaults['sync_channel'])
         ),
         help='redis channel name to use for syncing'
     )
@@ -159,7 +162,7 @@ def build_argument_parser(env):
         type=int, default=int(
             env.get(
                 'NAT_CONNTRACKER_EVAL_INTERVAL',
-                env.get('EVAL_INTERVAL', 60)
+                env.get('EVAL_INTERVAL', defaults['eval_interval'])
             )
         ),
         help='interval at which stats will be evaluated'
@@ -170,7 +173,9 @@ def build_argument_parser(env):
             filter(lambda s: s.strip() != '', [
                 s.strip() for s in env.get(
                     'NAT_CONNTRACKER_SRC_IGNORE_CIDRS',
-                    env.get('SRC_IGNORE_CIDRS', '127.0.0.1/32')
+                    env.get(
+                        'SRC_IGNORE_CIDRS', defaults['src_ignore_cidrs'][0]
+                    )
                 ).split(',')
             ])
         ),
@@ -182,7 +187,9 @@ def build_argument_parser(env):
             filter(lambda s: s.strip() != '', [
                 s.strip() for s in env.get(
                     'NAT_CONNTRACKER_DST_IGNORE_CIDRS',
-                    env.get('DST_IGNORE_CIDRS', '127.0.0.1/32')
+                    env.get(
+                        'DST_IGNORE_CIDRS', defaults['dst_ignore_cidrs'][0]
+                    )
                 ).split(',')
             ])
         ),
@@ -193,7 +200,7 @@ def build_argument_parser(env):
         action='store_true', default=_asbool(
             env.get(
                 'NAT_CONNTRACKER_INCLUDE_PRIVNETS',
-                env.get('INCLUDE_PRIVNETS', False)
+                env.get('INCLUDE_PRIVNETS', defaults['include_privnets'])
             )
         ),
         help='include private networks when handling flows'
@@ -203,7 +210,7 @@ def build_argument_parser(env):
         action='store_true', default=_asbool(
             env.get(
                 'NAT_CONNTRACKER_DEBUG',
-                env.get('DEBUG', False)
+                env.get('DEBUG', defaults['debug'])
             )
         ),
         help='enable debug logging'
