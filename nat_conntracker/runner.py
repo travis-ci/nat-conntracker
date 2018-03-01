@@ -76,7 +76,9 @@ class Runner(object):
 
     def _handle(self):
         try:
-            self._conntracker.handle(self._args['events'], is_done=self._is_done)
+            self._conntracker.handle(
+                self._args['events'], is_done=self._is_done
+            )
         except Exception:
             self._logger.exception('breaking out of handle wrap')
         finally:

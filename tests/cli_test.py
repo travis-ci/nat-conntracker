@@ -1,13 +1,8 @@
 import logging
 import os
-import re
 import sys
 
-from io import BytesIO, StringIO
-
 from nat_conntracker.__main__ import build_argument_parser, build_runner
-from nat_conntracker.conntracker import Conntracker
-from nat_conntracker.null_syncer import NullSyncer
 
 
 ISPY2 = sys.version_info.major == 2
