@@ -2,16 +2,13 @@
 import argparse
 import logging
 import os
-import signal
 import sys
-import time
-
-from threading import Thread
 
 from netaddr import IPNetwork
 
 from .conntracker import Conntracker
 from .null_syncer import NullSyncer
+from .runner import Runner
 
 
 __all__ = ['main']
@@ -21,8 +18,30 @@ def main(sysargs=sys.argv[:]):
     parser = build_argument_parser(os.environ)
     args = parser.parse_args(sysargs[1:])
 
+    runner = build_runner(**dict(args))
+    runner.run()
+    return 0
+
+
+def build_runner(**kwargs):
+    args = {
+        'conn_threshold': 100,
+        'debug': False,
+        'dst_ignore_cidrs': ('127.0.0.1/32',),
+        'eval_interval': 60,
+        'events': sys.stdin,
+        'include_privnets': False,
+        'log_file': None,
+        'max_stats_size': 1000,
+        'redis_url': '',
+        'src_ignore_cidrs': ('127.0.0.1/32',),
+        'sync_channel': 'nat-conntracker:sync',
+        'top_n': 10,
+    }
+    args.update(kwargs)
+
     logging_level = logging.INFO
-    if args.debug:
+    if args['debug']:
         logging_level = logging.DEBUG
 
     logging_args = dict(
@@ -31,32 +50,32 @@ def main(sysargs=sys.argv[:]):
         datefmt='%Y-%m-%dT%H:%M:%S%z'
     )
 
-    if args.log_file:
-        logging_args['filename'] = args.log_file
+    if args['log_file']:
+        logging_args['filename'] = args['log_file']
 
     logging.basicConfig(**logging_args)
     logger = logging.getLogger(__name__)
 
     syncer = NullSyncer()
-    if args.redis_url != '':
+    if args.get('redis_url', '') != '':
         from .redis_syncer import RedisSyncer
         syncer = RedisSyncer(
-            logger, args.sync_channel, conn_url=args.redis_url
+            logger, args['sync_channel'], conn_url=args['redis_url']
         )
 
     src_ign = None
     dst_ign = None
-    if args.include_privnets:
+    if args['include_privnets']:
         src_ign = ()
         dst_ign = ()
 
-    for src_item in args.src_ignore_cidrs:
+    for src_item in args['src_ignore_cidrs']:
         if src_item == 'private':
             src_ign = (src_ign or ()) + Conntracker.PRIVATE_NETS
             continue
         src_ign = (src_ign or ()) + (IPNetwork(src_item),)
 
-    for dst_item in args.dst_ignore_cidrs:
+    for dst_item in args['dst_ignore_cidrs']:
         if dst_item == 'private':
             dst_ign = (dst_ign or ()) + Conntracker.PRIVATE_NETS
             continue
@@ -65,11 +84,10 @@ def main(sysargs=sys.argv[:]):
     syncer.ping()
     conntracker = Conntracker(
         logger, syncer,
-        max_size=args.max_stats_size, src_ign=src_ign, dst_ign=dst_ign
+        max_size=args['max_stats_size'], src_ign=src_ign, dst_ign=dst_ign
     )
 
-    RunState(conntracker, syncer, logger, args).run()
-    return 0
+    return Runner(conntracker, syncer, logger, **dict(args))
 
 
 def build_argument_parser(env):
@@ -196,89 +214,6 @@ def build_argument_parser(env):
 
 def _asbool(value):
     return str(value).lower().strip() in ('1', 'yes', 'on', 'true')
-
-
-class RunState(object):
-
-    def __init__(self, conntracker, syncer, logger, args):
-        self._conntracker = conntracker
-        self._syncer = syncer
-        self._logger = logger
-        self._args = args
-        self._done = False
-        self._handle_thread = None
-        self._sub_thread = None
-
-    def run(self):
-        self._start_threads()
-
-        try:
-            signal.signal(signal.SIGUSR1, self._conntracker.dump_state)
-            self._logger.info(
-                'entering sample loop '
-                'threshold={} top_n={} eval_interval={}'.format(
-                    self._args.conn_threshold, self._args.top_n,
-                    self._args.eval_interval
-                )
-            )
-            self._run_sample_loop()
-        except KeyboardInterrupt:
-            self._logger.warn('interrupt')
-        finally:
-            signal.signal(signal.SIGUSR1, signal.SIG_IGN)
-            self._logger.info('cleaning up')
-            self._done = True
-            self._conntracker.sample(
-                self._args.conn_threshold, self._args.top_n
-            )
-            self._join()
-
-    def _run_sample_loop(self):
-        while True:
-            self._conntracker.sample(
-                self._args.conn_threshold, self._args.top_n
-            )
-            nextloop = time.time() + self._args.eval_interval
-            while time.time() < nextloop:
-                self._join()
-                if not self._is_alive():
-                    self._done = True
-                    return
-                if self._is_done():
-                    return
-                time.sleep(0.1)
-
-    def _start_threads(self):
-        self._handle_thread = Thread(target=self._handle)
-        self._handle_thread.start()
-
-        self._sub_thread = Thread(target=self._sub)
-        self._sub_thread.daemon = True
-        self._sub_thread.start()
-
-    def _join(self):
-        self._handle_thread.join(0.1)
-
-    def _is_alive(self):
-        return self._handle_thread.is_alive()
-
-    def _is_done(self):
-        return self._done
-
-    def _handle(self):
-        try:
-            self._conntracker.handle(self._args.events, is_done=self._is_done)
-        except Exception:
-            self._logger.exception('breaking out of handle wrap')
-        finally:
-            self._done = True
-
-    def _sub(self):
-        try:
-            self._syncer.sub(is_done=self._is_done)
-        except Exception:
-            self._logger.exception('breaking out of sub wrap')
-            self._done = True
 
 
 if __name__ == '__main__':
