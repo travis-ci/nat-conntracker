@@ -14,20 +14,20 @@ from .runner import Runner
 __all__ = ['main']
 
 
-ARG_DEFAULTS = {
-    'conn_threshold': 100,
-    'debug': False,
-    'dst_ignore_cidrs': ('127.0.0.1/32',),
-    'eval_interval': 60,
-    'events': sys.stdin,
-    'include_privnets': False,
-    'log_file': '',
-    'max_stats_size': 1000,
-    'redis_url': '',
-    'src_ignore_cidrs': ('127.0.0.1/32',),
-    'sync_channel': 'nat-conntracker:sync',
-    'top_n': 10,
-}
+ARG_DEFAULTS = (
+    ('conn_threshold', 100),
+    ('debug', False),
+    ('dst_ignore_cidrs', ('127.0.0.1/32',)),
+    ('eval_interval', 60),
+    ('events', sys.stdin),
+    ('include_privnets', False),
+    ('log_file', ''),
+    ('max_stats_size', 1000),
+    ('redis_url', ''),
+    ('src_ignore_cidrs', ('127.0.0.1/32',)),
+    ('sync_channel', 'nat-conntracker:sync'),
+    ('top_n', 10),
+)
 
 
 def main(sysargs=sys.argv[:]):
@@ -40,7 +40,7 @@ def main(sysargs=sys.argv[:]):
 
 
 def build_runner(**kwargs):
-    args = ARG_DEFAULTS.copy()
+    args = dict(ARG_DEFAULTS)
     args.update(kwargs)
 
     logging_level = logging.INFO
@@ -93,7 +93,8 @@ def build_runner(**kwargs):
     return Runner(conntracker, syncer, logger, **dict(args))
 
 
-def build_argument_parser(env, defaults=ARG_DEFAULTS):
+def build_argument_parser(env, defaults=None):
+    defaults = defaults if defaults is not None else dict(ARG_DEFAULTS)
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
