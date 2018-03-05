@@ -4,7 +4,10 @@ NAT Conntracker
 .. image:: https://travis-ci.org/travis-ci/nat-conntracker.svg?branch=master
     :target: https://travis-ci.org/travis-ci/nat-conntracker
 
-It does things!
+.. image:: https://codecov.io/gh/travis-ci/nat-conntracker/branch/master/graph/badge.svg
+    :target: https://codecov.io/gh/travis-ci/nat-conntracker
+
+Tracking some conns!
 
 Usage
 -----

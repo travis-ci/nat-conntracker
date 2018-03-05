@@ -2,11 +2,7 @@ import logging
 import os
 import sys
 
-from io import BytesIO, StringIO
-
-from nat_conntracker.__main__ import build_argument_parser, RunState
-from nat_conntracker.conntracker import Conntracker
-from nat_conntracker.null_syncer import NullSyncer
+from nat_conntracker.__main__ import build_argument_parser, build_runner
 
 
 ISPY2 = sys.version_info.major == 2
@@ -42,35 +38,16 @@ class FakeArgs(object):
         self.eval_interval = 1
 
 
-def test_run_events_sample(capsys):
-    tmpio = BytesIO() if ISPY2 else StringIO()
-
-    logger = logging.getLogger(__name__)
-    logger.level = logging.DEBUG
-    logger.propagate = 0
-    stream_handler = logging.StreamHandler(stream=tmpio)
-    stream_handler.setFormatter(
-        logging.Formatter(
-            fmt='time=%(asctime)s level=%(levelname)s %(message)s'
-        )
-    )
-    logger.addHandler(stream_handler)
-
-    args = FakeArgs()
-    args.events = open(
+def test_run_events_sample(caplog):
+    events = open(
         os.path.join(HERE, 'data', 'conntrack-events-sample.xml'), 'r'
     )
-    syncer = NullSyncer()
-    ctr = Conntracker(logger, syncer, src_ign=(), dst_ign=())
-    RunState(ctr, syncer, logger, args).run()
+    runner = build_runner(events=events, conn_threshold=100, debug=True)
+    with caplog.at_level(logging.DEBUG):
+        runner.run()
 
-    stream_handler.flush()
-    tmpio.flush()
-    tmpio.seek(0)
-    captured = tmpio.read()
-
-    assert 'WARNING over threshold=100 src=10.10.0.7' in captured
-    assert 'DEBUG adding' in captured
-    assert 'INFO begin sample' in captured
-    assert 'INFO end sample' in captured
-    assert 'INFO cleaning up' in captured
+    assert ' over threshold=100 src=10.10.0.7' in caplog.text
+    assert ' adding' in caplog.text
+    assert ' begin sample' in caplog.text
+    assert ' end sample' in caplog.text
+    assert ' cleaning up' in caplog.text

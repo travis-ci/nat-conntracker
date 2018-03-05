@@ -31,6 +31,7 @@ def main():
             'redis>=2.10'
         ],
         tests_require=[
+            'codecov>=2.0',
             'flake8>=3.5',
             'pytest>=3.4',
             'pytest-cov>=2.0',
