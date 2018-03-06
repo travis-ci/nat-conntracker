@@ -34,7 +34,7 @@ def main(sysargs=sys.argv[:]):
     parser = build_argument_parser(os.environ)
     args = parser.parse_args(sysargs[1:])
 
-    runner = build_runner(**dict(args))
+    runner = build_runner(**args.__dict__)
     runner.run()
     return 0
 
