@@ -7,3 +7,4 @@
 .venv3/
 dist/
 tests/data/*.xml
+nat_conntracker/__version__.py

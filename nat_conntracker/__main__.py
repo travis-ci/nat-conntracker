@@ -10,6 +10,11 @@ from .conntracker import Conntracker
 from .null_syncer import NullSyncer
 from .runner import Runner
 
+try:
+    from .__version__ import VERSION
+except ImportError:
+    VERSION = 'unknown'
+
 
 __all__ = ['main']
 
@@ -47,9 +52,13 @@ def build_runner(**kwargs):
     if args['debug']:
         logging_level = logging.DEBUG
 
+    log_format = 'time=%(asctime)s level=%(levelname)s %(message)s'
+    if VERSION != 'unknown':
+        log_format = 'v={} {}'.format(VERSION, log_format)
+
     logging_args = dict(
         level=logging_level,
-        format='time=%(asctime)s level=%(levelname)s %(message)s',
+        format=log_format,
         datefmt='%Y-%m-%dT%H:%M:%S%z'
     )
 
@@ -99,6 +108,10 @@ def build_argument_parser(env, defaults=None):
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
 
+    parser.add_argument(
+        '--version', action='version',
+        version='%(prog)s {}'.format(VERSION)
+    )
     parser.add_argument(
         'events', nargs='?', type=argparse.FileType('r'),
         default=defaults['events'],
