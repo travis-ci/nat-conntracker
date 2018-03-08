@@ -1,3 +1,7 @@
+import socket
+
+from threading import Thread
+
 from netaddr import IPNetwork, IPAddress
 
 from .stats import Stats
@@ -36,8 +40,9 @@ class Conntracker(object):
         for ((src, dst), count) in self.stats.top(n=top_n):
             if count >= threshold:
                 self._logger.warn(
-                    'over threshold={} src={} dst={} count={}'.format(
-                        threshold, src, dst, count
+                    ('over threshold={} src={} dst={} '
+                     'count={} hostname={}').format(
+                        threshold, src, dst, count, self._lookup_hostname(src)
                     )
                 )
                 self._syncer.pub(threshold, src, dst, count)
@@ -114,3 +119,19 @@ class Conntracker(object):
                     i + 1, src, dst, count
                 )
             )
+
+    def _lookup_hostname(self, ipv4, timeout=0.1):
+        ret = {'hostname': 'notset'}
+        fetch = Thread(target=self._build_hostname_fetch(ret, ipv4))
+        fetch.start()
+        fetch.join(timeout)
+        return ret['hostname']
+
+    def _build_hostname_fetch(self, ret, ipv4):
+        def fetch():
+            try:
+                ret['hostname'] = socket.gethostbyaddr(ipv4)[0]
+            except socket.herror:
+                ret['hostname'] = 'unknown'
+                self._logger.exception('failed to get hostname')
+        return fetch
