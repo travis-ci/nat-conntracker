@@ -11,8 +11,7 @@ script:
 - make install
 - make test
 - make docker-build
-- make docker-login
-- make docker-push
+- make docker-login docker-push
 after_success:
 - codecov
 notifications:
