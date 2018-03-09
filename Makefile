@@ -2,8 +2,8 @@ PACKAGE := nat_conntracker
 EXEC_PREFIX ?= /usr/local
 CONFIG_PREFIX ?= /etc
 
-PIP ?= pip
-PYTHON ?= python
+PIP ?= pip3
+PYTHON ?= python3
 
 TESTDATA := tests/data/conntrack-events-sample.xml
 
