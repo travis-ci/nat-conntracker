@@ -2,6 +2,9 @@ PACKAGE := nat_conntracker
 EXEC_PREFIX ?= /usr/local
 CONFIG_PREFIX ?= /etc
 
+GIT_DESCRIBE ?= $(shell git describe --always --dirty --tags)
+DOCKER_TAG ?= travisci/nat-conntracker:$(GIT_DESCRIBE)
+
 DOCKER ?= docker
 PIP ?= pip3
 PYTHON ?= python3
@@ -44,7 +47,16 @@ sysinstall: install
 
 .PHONY: docker-build
 docker-build:
-	$(DOCKER) build -t=travisci/nat-conntracker:$(shell git describe --always --dirty --tags) .
+	$(DOCKER) build -t="$(DOCKER_TAG)" .
+
+.PHONY: docker-login
+docker-login:
+	@echo "$(DOCKER_LOGIN_PASSWORD)" | \
+		$(DOCKER) login --username "$(DOCKER_LOGIN_USERNAME)" --password-stdin "$(DOCKER_LOGIN_SERVER)"
+
+.PHONY: docker-push
+docker-push:
+	$(DOCKER) push "$(DOCKER_TAG)"
 
 tests/data/conntrack-events-sample.xml: tests/data/conntrack-events-sample.xml.bz2
 	bzcat $^ >$@
