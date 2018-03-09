@@ -3,12 +3,29 @@ set -o errexit
 set -o pipefail
 
 main() {
+  : "${RUNDIR:=/var/tmp/travis-run.d}"
+
   __loadenv
-  local conntrack_args="${NAT_CONNTRACKER_CONNTRACK_ARGS}"
-  if [[ ! "${conntrack_args}" ]]; then
-    conntrack_args='-o xml -E conntrack'
-  fi
-  conntrack ${conntrack_args} | nat-conntracker -
+
+  : "${NAT_CONNTRACKER_CONNTRACK_ARGS:=-o xml -E conntrack}"
+  : "${NAT_CONNTRACKER_SELF_IMAGE:-travisci/nat-conntracker:master}"
+
+  local env_file="${RUNDIR}/nat-conntracker.env"
+  printenv | grep ^NAT_CONNTRACKER | sort >"${env_file}"
+
+  docker rm nat-conntracker || true
+
+  conntrack ${NAT_CONNTRACKER_CONNTRACK_ARGS} |
+    docker run \
+      --rm \
+      --user nobody \
+      --interactive \
+      --attach STDIN \
+      --attach STDOUT \
+      --attach STDERR \
+      --name nat-conntracker \
+      --env-file "${env_file}" \
+      "${NAT_CONNTRACKER_SELF_IMAGE}"
 }
 
 __loadenv() {

@@ -2,6 +2,7 @@ PACKAGE := nat_conntracker
 EXEC_PREFIX ?= /usr/local
 CONFIG_PREFIX ?= /etc
 
+DOCKER ?= docker
 PIP ?= pip3
 PYTHON ?= python3
 
@@ -12,7 +13,7 @@ all: deps lint test
 
 .PHONY: clean
 clean:
-	rm -f $(TESTDATA)
+	$(RM) $(TESTDATA)
 
 .PHONY: deps
 deps: $(TESTDATA)
@@ -40,6 +41,10 @@ sysinstall: install
 	cp -v ./misc/nat-conntracker-wrapper $(EXEC_PREFIX)/bin/nat-conntracker-wrapper
 	ln -svf $(PWD)/nat_conntracker $(shell $(PYTHON) -c 'import os,redis;print(os.path.dirname(os.path.dirname(redis.__file__)))')/
 	systemctl enable nat-conntracker
+
+.PHONY: docker-build
+docker-build:
+	$(DOCKER) build -t=travisci/nat-conntracker:$(shell git describe --always --dirty --tags) .
 
 tests/data/conntrack-events-sample.xml: tests/data/conntrack-events-sample.xml.bz2
 	bzcat $^ >$@
