@@ -6,7 +6,11 @@ main() {
   set -o allexport
   eval "$(__loadenv)"
   set +o allexport
-  conntrack -o xml -E conntrack | nat-conntracker -
+  local conntrack_args="${NAT_CONNTRACKER_CONNTRACK_ARGS}"
+  if [[ ! "${conntrack_args}" ]]; then
+    conntrack_args='-o xml -E conntrack'
+  fi
+  conntrack ${conntrack_args} | nat-conntracker -
 }
 
 __loadenv() {
