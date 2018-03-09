@@ -110,7 +110,7 @@ def build_argument_parser(env, defaults=None):
     )
 
     parser.add_argument(
-        '--version', action='version',
+        '-V', '--version', action='version',
         version='%(prog)s {}'.format(VERSION)
     )
     parser.add_argument(

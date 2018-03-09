@@ -2,6 +2,9 @@ PACKAGE := nat_conntracker
 EXEC_PREFIX ?= /usr/local
 CONFIG_PREFIX ?= /etc
 
+PIP ?= pip
+PYTHON ?= python
+
 TESTDATA := tests/data/conntrack-events-sample.xml
 
 .PHONY: all
@@ -13,19 +16,19 @@ clean:
 
 .PHONY: deps
 deps: $(TESTDATA)
-	pip install -r requirements.txt
+	$(PIP) install -r requirements.txt
 
 .PHONY: lint
 lint:
-	python setup.py flake8
+	$(PYTHON) setup.py flake8
 
 .PHONY: install
 install:
-	python setup.py install
+	$(PYTHON) setup.py install
 
 .PHONY: test
 test:
-	python setup.py pytest --addopts="--cov=$(PACKAGE)"
+	$(PYTHON) setup.py pytest --addopts="--cov=$(PACKAGE)"
 
 # The sysinstall target is expected to be run by a user with write access to the
 # CONFIG_PREFIX and EXEC_PREFIX sub-directories used below, as well as the
