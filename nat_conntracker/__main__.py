@@ -11,8 +11,9 @@ from .null_syncer import NullSyncer
 from .runner import Runner
 
 try:
-    from .__version__ import VERSION
-except ImportError:
+    import pkg_resources
+    VERSION = pkg_resources.get_distribution('nat_conntracker').version
+except Exception:
     VERSION = 'unknown'
 
 
