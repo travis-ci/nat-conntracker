@@ -11,9 +11,9 @@ script:
 - make install
 - make test
 - make docker-build
-after_success:
-- codecov
 - make docker-login
 - make docker-push
+after_success:
+- codecov
 notifications:
   email: false
