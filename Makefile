@@ -17,7 +17,7 @@ deps: $(TESTDATA)
 
 .PHONY: lint
 lint:
-	git ls-files '*.py' | xargs flake8
+	python setup.py flake8
 
 .PHONY: install
 install:
@@ -25,7 +25,7 @@ install:
 
 .PHONY: test
 test:
-	pytest --cov=$(PACKAGE) tests/
+	python setup.py pytest --addopts="--cov=$(PACKAGE)"
 
 # The sysinstall target is expected to be run by a user with write access to the
 # CONFIG_PREFIX and EXEC_PREFIX sub-directories used below, as well as the

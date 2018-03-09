@@ -3,9 +3,7 @@ set -o errexit
 set -o pipefail
 
 main() {
-  set -o allexport
-  eval "$(__loadenv)"
-  set +o allexport
+  __loadenv
   local conntrack_args="${NAT_CONNTRACKER_CONNTRACK_ARGS}"
   if [[ ! "${conntrack_args}" ]]; then
     conntrack_args='-o xml -E conntrack'
@@ -21,7 +19,9 @@ __loadenv() {
     nat-conntracker-cloud-init \
     nat-conntracker-local; do
     if [ -f "${ETC_DEFAULT}/${config_file}" ]; then
-      cat "${ETC_DEFAULT}/${config_file}"
+      set -o allexport
+      source "${ETC_DEFAULT}/${config_file}"
+      set +o allexport
     fi
   done
 }

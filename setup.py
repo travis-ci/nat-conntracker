@@ -2,7 +2,7 @@ import codecs
 import os
 import sys
 
-from setuptools import setup, find_packages
+from setuptools import setup
 
 _HERE = os.path.abspath(os.path.dirname(__file__))
 
@@ -21,7 +21,6 @@ def main():
         author_email='contact+nat-conntracker@travis-ci.org',
         license='MIT',
         url='https://github.com/travis-ci/nat-conntracker',
-        packages=find_packages(exclude=['tests']),
         use_scm_version=True,
         setup_requires=[
             'pytest-runner>=4.0',
