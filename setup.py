@@ -1,6 +1,5 @@
 import codecs
 import os
-import subprocess
 import sys
 
 from setuptools import setup, find_packages
@@ -13,26 +12,9 @@ def read(*parts):
         return fp.read()
 
 
-def get_version():
-    return subprocess.check_output(
-        ['git', 'describe', '--always', '--dirty', '--tags']
-    ).decode('utf-8').strip()
-
-
-def write_version_file(version):
-    version_file = os.path.join(_HERE, 'nat_conntracker', '__version__.py')
-    with open(version_file, 'w') as fp:
-        fp.write('# WARNING: this is a generated file\n\n')
-        fp.write('VERSION = {!r}\n'.format(version))
-
-
 def main():
-    version = get_version()
-    write_version_file(version)
-
     setup(
         name='nat-conntracker',
-        version=version,
         description='Conntrack XML eating NAT thing',
         long_description=read('README.rst'),
         author='Travis CI GmbH',
@@ -40,8 +22,10 @@ def main():
         license='MIT',
         url='https://github.com/travis-ci/nat-conntracker',
         packages=find_packages(exclude=['tests']),
+        use_scm_version=True,
         setup_requires=[
-            'pytest-runner>=4.0'
+            'pytest-runner>=4.0',
+            'setuptools_scm>=1.15'
         ],
         install_requires=[
             'netaddr>=0.7',
