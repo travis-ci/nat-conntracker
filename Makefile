@@ -24,7 +24,7 @@ lint:
 
 .PHONY: install
 install:
-	$(PIP3) install --upgrade --ignore-installed $(PWD)
+	$(PIP) install --upgrade --ignore-installed $(PWD)
 
 .PHONY: test
 test:
