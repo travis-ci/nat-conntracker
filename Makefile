@@ -24,7 +24,7 @@ lint:
 
 .PHONY: install
 install:
-	$(PYTHON) setup.py install
+	$(PIP3) install --upgrade --ignore-installed $(PWD)
 
 .PHONY: test
 test:
