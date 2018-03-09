@@ -52,7 +52,7 @@ docker-build:
 .PHONY: docker-login
 docker-login:
 	@echo "$(DOCKER_LOGIN_PASSWORD)" | \
-		$(DOCKER) login --username "$(DOCKER_LOGIN_USERNAME)" --password-stdin "$(DOCKER_LOGIN_SERVER)"
+		$(DOCKER) login --username "$(DOCKER_LOGIN_USERNAME)" --password-stdin
 
 .PHONY: docker-push
 docker-push:
