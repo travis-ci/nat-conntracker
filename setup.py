@@ -22,6 +22,7 @@ def main():
         license='MIT',
         url='https://github.com/travis-ci/nat-conntracker',
         use_scm_version=True,
+        packages=['nat_conntracker'],
         setup_requires=[
             'pytest-runner>=4.0',
             'setuptools_scm>=1.15'
@@ -44,7 +45,7 @@ def main():
         },
         platforms=['any'],
         zip_safe=False,
-        python_requires='>=2.7,!=3.0.*,!=3.1.*,!=3.2.*'
+        python_requires='>=3.5'
     )
     return 0
 

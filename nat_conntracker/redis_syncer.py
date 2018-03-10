@@ -40,7 +40,7 @@ class RedisSyncer(object):
             return
 
         try:
-            msg = json.loads(message['data'])
+            msg = json.loads(message['data'].decode('utf-8'))
             self._logger.warn(
                 ('over threshold={threshold} src={src} dst={dst} '
                  'count={count} source=sync').format(**msg)

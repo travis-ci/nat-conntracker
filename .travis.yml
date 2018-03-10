@@ -1,7 +1,6 @@
 language: python
-python:
-- '2.7'
-- '3.6'
+sudo: required
+python: '3.6'
 cache:
   pip: true
 services:
@@ -11,6 +10,8 @@ script:
 - make lint
 - make install
 - make test
+- make docker-build
+- make docker-login docker-push
 after_success:
 - codecov
 notifications:
