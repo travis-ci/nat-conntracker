@@ -42,7 +42,6 @@ sysinstall: install
 	touch $(CONFIG_PREFIX)/default/nat-conntracker
 	cp -v ./misc/nat-conntracker.service $(CONFIG_PREFIX)/systemd/system/nat-conntracker.service
 	cp -v ./misc/nat-conntracker-wrapper $(EXEC_PREFIX)/bin/nat-conntracker-wrapper
-	ln -svf $(PWD)/nat_conntracker $(shell $(PYTHON) -c 'import os,redis;print(os.path.dirname(os.path.dirname(redis.__file__)))')/
 	systemctl enable nat-conntracker
 
 .PHONY: docker-build
