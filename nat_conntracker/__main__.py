@@ -39,6 +39,7 @@ ARG_DEFAULTS = (
 def main(sysargs=sys.argv[:]):
     parser = build_argument_parser(os.environ)
     args = parser.parse_args(sysargs[1:])
+    _handle_misc_printing(args.print_service, args.print_wrapper)
 
     runner = build_runner(**args.__dict__)
     runner.run()
@@ -230,12 +231,36 @@ def build_argument_parser(env, defaults=None):
         ),
         help='enable debug logging'
     )
+    parser.add_argument(
+        '--print-service',
+        action='store_true', default=False,
+        help='print systemd service definition and exit'
+    )
+    parser.add_argument(
+        '--print-wrapper',
+        action='store_true', default=False,
+        help='print wrapper script and exit'
+    )
 
     return parser
 
 
 def _asbool(value):
     return str(value).lower().strip() in ('1', 'yes', 'on', 'true')
+
+
+def _handle_misc_printing(print_service, print_wrapper):
+    _top = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+    for truth, filename in (
+        (print_service, 'nat-conntracker.service'),
+        (print_wrapper, 'nat-conntracker-wrapper')
+    ):
+        if not truth:
+            continue
+        with open(os.path.join(_top, 'misc', filename)) as fp:
+            print(fp.read(), end='')
+    sys.exit(0)
 
 
 if __name__ == '__main__':
