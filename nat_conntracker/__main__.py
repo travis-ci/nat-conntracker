@@ -4,6 +4,8 @@ import logging
 import os
 import sys
 
+from urllib.parse import unquote_plus
+
 from netaddr import IPNetwork
 
 from .conntracker import Conntracker
@@ -151,26 +153,29 @@ def build_argument_parser(env, defaults=None):
     )
     parser.add_argument(
         '-l', '--log-file',
-        default=env.get(
+        type=unquote_plus,
+        default=unquote_plus(env.get(
             'NAT_CONNTRACKER_LOG_FILE',
             env.get('LOG_FILE', defaults['log_file'])
-        ),
+        )),
         help='optional separate file for logging'
     )
     parser.add_argument(
         '-R', '--redis-url',
-        default=env.get(
+        type=unquote_plus,
+        default=unquote_plus(env.get(
             'NAT_CONNTRACKER_REDIS_URL',
             env.get('REDIS_URL', defaults['redis_url'])
-        ),
+        )),
         help='redis URL for syncing conntracker'
     )
     parser.add_argument(
         '-C', '--sync-channel',
-        default=env.get(
+        type=unquote_plus,
+        default=unquote_plus(env.get(
             'NAT_CONNTRACKER_SYNC_CHANNEL',
             env.get('SYNC_CHANNEL', defaults['sync_channel'])
-        ),
+        )),
         help='redis channel name to use for syncing'
     )
     parser.add_argument(
@@ -185,9 +190,11 @@ def build_argument_parser(env, defaults=None):
     )
     parser.add_argument(
         '-s', '--src-ignore-cidrs',
-        action='append', default=list(
+        action='append',
+        type=unquote_plus,
+        default=list(
             filter(lambda s: s.strip() != '', [
-                s.strip() for s in env.get(
+                unquote_plus(s.strip()) for s in env.get(
                     'NAT_CONNTRACKER_SRC_IGNORE_CIDRS',
                     env.get(
                         'SRC_IGNORE_CIDRS', defaults['src_ignore_cidrs'][0]
@@ -199,9 +206,11 @@ def build_argument_parser(env, defaults=None):
     )
     parser.add_argument(
         '-d', '--dst-ignore-cidrs',
-        action='append', default=list(
+        action='append',
+        type=unquote_plus,
+        default=list(
             filter(lambda s: s.strip() != '', [
-                s.strip() for s in env.get(
+                unquote_plus(s.strip()) for s in env.get(
                     'NAT_CONNTRACKER_DST_IGNORE_CIDRS',
                     env.get(
                         'DST_IGNORE_CIDRS', defaults['dst_ignore_cidrs'][0]
@@ -213,7 +222,8 @@ def build_argument_parser(env, defaults=None):
     )
     parser.add_argument(
         '-P', '--include-privnets',
-        action='store_true', default=_asbool(
+        action='store_true',
+        default=_asbool(
             env.get(
                 'NAT_CONNTRACKER_INCLUDE_PRIVNETS',
                 env.get('INCLUDE_PRIVNETS', defaults['include_privnets'])
@@ -223,7 +233,8 @@ def build_argument_parser(env, defaults=None):
     )
     parser.add_argument(
         '-D', '--debug',
-        action='store_true', default=_asbool(
+        action='store_true',
+        default=_asbool(
             env.get(
                 'NAT_CONNTRACKER_DEBUG',
                 env.get('DEBUG', defaults['debug'])
@@ -251,6 +262,7 @@ def _asbool(value):
 
 def _handle_misc_printing(print_service, print_wrapper):
     _top = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    printed_any = False
 
     for truth, filename in (
         (print_service, 'nat-conntracker.service'),
@@ -258,9 +270,12 @@ def _handle_misc_printing(print_service, print_wrapper):
     ):
         if not truth:
             continue
+        printed_any = True
         with open(os.path.join(_top, 'misc', filename)) as fp:
             print(fp.read(), end='')
-    sys.exit(0)
+
+    if printed_any:
+        sys.exit(0)
 
 
 if __name__ == '__main__':
