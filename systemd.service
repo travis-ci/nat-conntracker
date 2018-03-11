@@ -1,8 +1,9 @@
+# Service definition to be installed somewhere in the systemd load path
 [Unit]
 Description=NAT Conntracker
 
 [Service]
-ExecStart=/usr/local/bin/nat-conntracker-wrapper
+ExecStart=/usr/sbin/%p-wrapper
 Restart=always
 WorkingDirectory=/
 

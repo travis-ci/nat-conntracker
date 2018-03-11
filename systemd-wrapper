@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# systemd wrapper script expected to be installed at /usr/sbin/%n-wrapper for
+# use by adjacent systemd.service file
+set -o errexit
+set -o pipefail
+
+main() {
+  local name="${1:-nat-conntracker}"
+
+  eval "$(tfw printenv nat-conntracker)"
+
+  : "${NAT_CONNTRACKER_CONNTRACK_ARGS:=-o+xml+-E+conntrack}"
+  : "${NAT_CONNTRACKER_SELF_IMAGE:-travisci/nat-conntracker:master}"
+
+  docker stop "${name}" &>/dev/null || true
+  docker rm -f "${name}" &>/dev/null || true
+
+  local env_file
+  env_file="$(tfw writeenv nat-conntracker "${name}")"
+
+  local conntrack_args
+  conntrack_args="$(tfw urldecode "${NAT_CONNTRACKER_CONNTRACK_ARGS}")"
+
+  local conntrack_command="conntrack ${conntrack_args}"
+  ${conntrack_command} |
+    docker run \
+      --rm \
+      --user nobody \
+      --interactive \
+      --attach STDIN \
+      --attach STDOUT \
+      --attach STDERR \
+      --name "${name}" \
+      --env-file "${env_file}" \
+      "${NAT_CONNTRACKER_SELF_IMAGE}"
+}
+
+main "$@"
