@@ -51,7 +51,7 @@ __urlunquote() {
 import sys
 import urllib.parse
 sys.stdout.write(
-    urllib.parse.unquote("${1}") + '\\n'
+    urllib.parse.unquote_plus("${1}") + '\\n'
 )
 EOPYTHON
 }
