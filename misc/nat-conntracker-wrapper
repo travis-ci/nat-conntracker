@@ -8,7 +8,7 @@ main() {
 
   __loadenv
 
-  : "${NAT_CONNTRACKER_CONNTRACK_ARGS:=-o%20xml%20-E%20conntrack}"
+  : "${NAT_CONNTRACKER_CONNTRACK_ARGS:=-o+xml+-E+conntrack}"
   : "${NAT_CONNTRACKER_SELF_IMAGE:-travisci/nat-conntracker:master}"
 
   local conntrack_args
