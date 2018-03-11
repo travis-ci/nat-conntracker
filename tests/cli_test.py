@@ -17,7 +17,7 @@ def test_build_argument_parser():
     args = parser.parse_args([
         '--top-n=4',
         '-S', '499',
-        '--log-file', 'wat.log',
+        '--log-file', '%2Fhuh%2Fwat.log',
         '-I24',
         '--include-privnets'
     ])
@@ -25,7 +25,7 @@ def test_build_argument_parser():
     assert args.top_n == 4
     assert args.conn_threshold == 99
     assert args.max_stats_size == 499
-    assert args.log_file == 'wat.log'
+    assert args.log_file == '/huh/wat.log'
     assert args.eval_interval == 24
     assert args.include_privnets is True
 
