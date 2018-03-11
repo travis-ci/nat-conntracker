@@ -262,6 +262,7 @@ def _asbool(value):
 
 def _handle_misc_printing(print_service, print_wrapper):
     _top = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    printed_any = False
 
     for truth, filename in (
         (print_service, 'nat-conntracker.service'),
@@ -269,9 +270,12 @@ def _handle_misc_printing(print_service, print_wrapper):
     ):
         if not truth:
             continue
+        printed_any = True
         with open(os.path.join(_top, 'misc', filename)) as fp:
             print(fp.read(), end='')
-    sys.exit(0)
+
+    if printed_any:
+        sys.exit(0)
 
 
 if __name__ == '__main__':
