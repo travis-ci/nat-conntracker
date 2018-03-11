@@ -8,15 +8,17 @@ main() {
 
   __loadenv
 
-  : "${NAT_CONNTRACKER_CONNTRACK_ARGS:=-o xml -E conntrack}"
+  : "${NAT_CONNTRACKER_CONNTRACK_ARGS:=-o%20xml%20-E%20conntrack}"
   : "${NAT_CONNTRACKER_SELF_IMAGE:-travisci/nat-conntracker:master}"
 
+  local conntrack_args
+  conntrack_args="$(__urlunquote "${NAT_CONNTRACKER_CONNTRACK_ARGS}")"
   local env_file="${RUNDIR}/nat-conntracker.env"
   printenv | grep ^NAT_CONNTRACKER | sort >"${env_file}"
 
   docker rm -f "${inst_name}" || true
 
-  conntrack ${NAT_CONNTRACKER_CONNTRACK_ARGS} |
+  conntrack ${conntrack_args} |
     exec docker run \
       --rm \
       --user nobody \
@@ -42,6 +44,16 @@ __loadenv() {
       set +o allexport
     fi
   done
+}
+
+__urlunquote() {
+  python3 <<EOPYTHON
+import sys
+import urllib.parse
+sys.stdout.write(
+    urllib.parse.unquote("${1}") + '\\n'
+)
+EOPYTHON
 }
 
 main "$@"
