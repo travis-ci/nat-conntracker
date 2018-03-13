@@ -3,7 +3,7 @@
 Description=NAT Conntracker
 
 [Service]
-ExecStart=/usr/sbin/%p-wrapper
+ExecStart=___SYSTEMD_WRAPPER___
 Restart=always
 WorkingDirectory=/
 

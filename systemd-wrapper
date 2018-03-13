@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# systemd wrapper script expected to be installed at /usr/sbin/%n-wrapper for
+# systemd wrapper script expected to be installed at ___SYSTEMD_WRAPPER___ for
 # use by adjacent systemd.service file
 set -o errexit
 set -o pipefail
