@@ -28,6 +28,7 @@ def main():
             'setuptools_scm>=1.15'
         ],
         install_requires=[
+            'cachetools>=2.0',
             'netaddr>=0.7',
             'redis>=2.10'
         ],

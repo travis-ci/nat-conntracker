@@ -94,6 +94,8 @@ def build_runner(**kwargs):
         from .redis_settings import RedisSettings
         settings = RedisSettings(conn_url=args['redis_url'])
 
+        logger.info('using redis syncer and settings')
+
     src_ign = None
     dst_ign = None
     if args['include_privnets']:

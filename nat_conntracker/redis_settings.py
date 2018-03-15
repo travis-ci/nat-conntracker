@@ -1,4 +1,8 @@
+import operator
+
+
 import redis
+from cachetools import TTLCache, cachedmethod
 from netaddr import IPNetwork
 
 
@@ -8,16 +12,19 @@ __all__ = ['RedisSettings']
 class RedisSettings(object):
 
     def __init__(self, namespace='nat-conntracker',
-                 conn_url='redis://localhost:6379/0'):
+                 conn_url='redis://localhost:6379/0', local_ttl=5):
         self._namespace = namespace
         self._conn = redis.from_url(conn_url)
+        self._cache = TTLCache(len(dir(self)), local_ttl)
 
     def ping(self):
         return self._conn.ping()
 
+    @cachedmethod(operator.attrgetter('_cache'))
     def src_ignore(self):
         return self._get_networks('src-ignore')
 
+    @cachedmethod(operator.attrgetter('_cache'))
     def dst_ignore(self):
         return self._get_networks('dst-ignore')
 
