@@ -63,3 +63,21 @@ def test_redis_syncer_sub(syncer, monkeypatch):
 
     assert mpsconn.subscriptions is not None
     assert mpsconn.subscriptions[syncer._channel] is not None
+
+
+def test_redis_syncer_ping(syncer):
+    assert syncer.ping() == b'PONG'
+
+
+def test_redis_syncer_handle_message(syncer):
+    assert syncer._handle_message({'type': 'not-a-message'}) is None
+    bogus = syncer._handle_message(
+        {'type': 'message', 'data': '{"bogus":true}'}
+    )
+    assert bogus is None
+
+    ok = syncer._handle_message({
+        'type': 'message',
+        'data': b'{"threshold":5,"src":"10.9.8.7","dst":"1.3.3.7","count":40}'
+    })
+    assert ok is None

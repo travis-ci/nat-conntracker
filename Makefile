@@ -12,11 +12,11 @@ PYTHON ?= python3
 TESTDATA := tests/data/conntrack-events-sample.xml
 
 .PHONY: all
-all: deps lint test
+all: clean deps lint coverage
 
 .PHONY: clean
 clean:
-	$(RM) $(TESTDATA)
+	$(RM) -r $(TESTDATA) htmlcov .coverage
 
 .PHONY: deps
 deps: $(TESTDATA)
@@ -30,9 +30,18 @@ lint:
 install:
 	$(PIP) install --upgrade --ignore-installed $(PWD)
 
+.PHONY: coverage
+coverage: htmlcov/index.html
+
 .PHONY: test
 test:
 	$(PYTHON) setup.py pytest --addopts="--cov=$(PACKAGE)"
+
+
+htmlcov/index.html: .coverage
+	coverage html
+
+.coverage: test
 
 # The sysinstall target is expected to be run by a user with write access to the
 # CONFIG_PREFIX and EXEC_PREFIX sub-directories used below, as well as the

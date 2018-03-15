@@ -2,9 +2,8 @@ import socket
 
 from threading import Thread
 
-from netaddr import IPNetwork, IPAddress
+from netaddr import IPAddress
 
-from .stats import Stats
 from .flow_parser import FlowParser
 
 
@@ -12,22 +11,12 @@ __all__ = ['Conntracker']
 
 
 class Conntracker(object):
-    PRIVATE_NETS = (
-        IPNetwork('10.0.0.0/8'),
-        IPNetwork('127.0.0.0/8'),
-        IPNetwork('169.254.0.0/16'),
-        IPNetwork('172.16.0.0/12'),
-        IPNetwork('192.0.2.0/24'),
-        IPNetwork('192.168.0.0/16'),
-    )
 
-    def __init__(self, logger, syncer,
-                 max_size=1000, src_ign=None, dst_ign=None):
+    def __init__(self, logger, syncer, settings, stats):
         self._logger = logger
         self._syncer = syncer
-        self.src_ign = src_ign if src_ign is not None else self.PRIVATE_NETS
-        self.dst_ign = dst_ign if dst_ign is not None else self.PRIVATE_NETS
-        self.stats = Stats(max_size=max_size)
+        self._settings = settings
+        self._stats = stats
 
     def handle(self, stream, is_done=None):
         FlowParser(self, self._logger).handle_events(stream, is_done=is_done)
@@ -37,7 +26,7 @@ class Conntracker(object):
             'begin sample threshold={} top_n={}'.format(threshold, top_n)
         )
 
-        for ((src, dst), count) in self.stats.top(n=top_n):
+        for ((src, dst), count) in self._stats.top(n=top_n):
             if count >= threshold:
                 self._logger.warn(
                     ('over threshold={} src={} dst={} '
@@ -47,7 +36,7 @@ class Conntracker(object):
                 )
                 self._syncer.pub(threshold, src, dst, count)
 
-        self.stats.reset()
+        self._stats.reset()
         self._logger.info(
             'end sample threshold={} top_n={}'.format(threshold, top_n)
         )
@@ -71,7 +60,7 @@ class Conntracker(object):
         src_addr = IPAddress(src.host)
         dst_addr = IPAddress(dst.host)
 
-        for ign in self.dst_ign:
+        for ign in self._settings.dst_ignore():
             if dst_addr in ign:
                 self._logger.debug(
                     'ignoring dst match src={} dst={}'.format(
@@ -80,7 +69,7 @@ class Conntracker(object):
                 )
                 return
 
-        for ign in self.src_ign:
+        for ign in self._settings.src_ignore():
             if src_addr in ign:
                 self._logger.debug(
                     'ignoring src match src={} dst={}'.format(
@@ -93,27 +82,29 @@ class Conntracker(object):
             self._logger.debug(
                 'adding src={} dst={}'.format(src_addr, dst_addr)
             )
-            self.stats.add(src, dst)
+            self._stats.add(src, dst)
         except Exception as exc:
             self._logger.error(exc)
 
     def dump_state(self, *_):
-        for i, ign in enumerate(self.src_ign):
+        src_ign = self._settings.src_ignore()
+        for i, ign in enumerate(sorted(src_ign)):
             self._logger.info(
                 'src_ign dump {}/{} net={}'.format(
-                    i + 1, len(self.src_ign), ign
+                    i + 1, len(src_ign), ign
                 )
             )
 
-        for i, ign in enumerate(self.dst_ign):
+        dst_ign = self._settings.dst_ignore()
+        for i, ign in enumerate(sorted(dst_ign)):
             self._logger.info(
                 'dst_ign dump {}/{} net={}'.format(
-                    i + 1, len(self.dst_ign), ign
+                    i + 1, len(dst_ign), ign
                 )
             )
 
-        self._logger.info('stats max_size={}'.format(self.stats.max_size))
-        for i, ((src, dst), count) in enumerate(self.stats.top(10)):
+        self._logger.info('stats max_size={}'.format(self._stats.max_size))
+        for i, ((src, dst), count) in enumerate(self._stats.top(10)):
             self._logger.info(
                 'stats dump {}/10 src={} dst={} count={}'.format(
                     i + 1, src, dst, count

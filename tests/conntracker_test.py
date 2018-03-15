@@ -1,19 +1,29 @@
+import logging
+
+import pytest
 from netaddr import IPAddress
 
 from nat_conntracker.conntracker import Conntracker
+from nat_conntracker.flow_parser import Flow
 
 
-def test_conntracker_init():
-    ctr = Conntracker(None, None)
-    assert ctr.src_ign is not None
-    assert ctr.dst_ign is not None
-    assert ctr.stats is not None
+@pytest.fixture
+def empty_conntracker():
+    return Conntracker(None, None, None, None)
 
 
-def test_private_nets():
-    assert len(Conntracker.PRIVATE_NETS) > 0
-    covers_local = False
-    for net in Conntracker.PRIVATE_NETS:
-        if IPAddress('10.10.0.99') in net:
-            covers_local = True
-    assert covers_local
+def test_conntracker_init(empty_conntracker):
+    assert empty_conntracker._settings is None
+    assert empty_conntracker._syncer is None
+    assert empty_conntracker._logger is None
+    assert empty_conntracker._stats is None
+
+
+def test_conntracker_handle_flow(empty_conntracker):
+    empty_conntracker._logger = logging.getLogger()
+
+    assert empty_conntracker.handle_flow(None) is None
+
+    empty_flow = Flow()
+    empty_flow.flowtype = 'new'
+    assert empty_conntracker.handle_flow(empty_flow) is None

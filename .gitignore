@@ -6,4 +6,5 @@
 .venv3/
 build/
 dist/
+htmlcov/
 tests/data/*.xml

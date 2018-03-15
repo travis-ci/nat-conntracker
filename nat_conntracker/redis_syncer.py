@@ -49,4 +49,4 @@ class RedisSyncer(object):
             self._logger.exception('failed to handle message')
 
     def ping(self):
-        self._conn.ping()
+        return self._conn.ping()

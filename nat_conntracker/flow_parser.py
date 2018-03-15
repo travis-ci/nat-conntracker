@@ -7,6 +7,7 @@ __all__ = ['FlowParser']
 
 
 class FlowParser(object):
+
     def __init__(self, conntracker, logger):
         self._conntracker = conntracker
         self._logger = logger
@@ -32,6 +33,7 @@ FlowAddress = namedtuple('FlowAddress', ['host', 'port'])
 
 
 class FlowMetaGeneric(object):
+
     def __init__(self):
         self.direction = ''
 
@@ -48,6 +50,7 @@ class FlowMetaGeneric(object):
 
 
 class FlowMetaOrigReply(object):
+
     def __init__(self):
         self.direction = ''
         self.src = None
@@ -93,6 +96,7 @@ class FlowMetaIndependent(object):
 
 
 class Flow(object):
+
     def __init__(self):
         self.flowtype = ''
         self.meta = []
