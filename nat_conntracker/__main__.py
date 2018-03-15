@@ -116,9 +116,11 @@ def build_runner(**kwargs):
     syncer.ping()
 
     for net in src_ign:
+        logger.info('adding src ignore={}'.format(net))
         settings.add_ignore_src(net)
 
     for net in dst_ign:
+        logger.info('adding dst ignore={}'.format(net))
         settings.add_ignore_dst(net)
 
     conntracker = Conntracker(
