@@ -12,7 +12,7 @@ __all__ = ['RedisSettings']
 class RedisSettings(object):
 
     def __init__(self, namespace='nat-conntracker',
-                 conn_url='redis://localhost:6379/0', local_ttl=5):
+                 conn_url='redis://localhost:6379/0', local_ttl=30):
         self._namespace = namespace
         self._conn = redis.from_url(conn_url)
         self._cache = TTLCache(len(dir(self)), local_ttl)
