@@ -9,8 +9,10 @@ from urllib.parse import unquote_plus
 from netaddr import IPNetwork
 
 from .conntracker import Conntracker
+from .mem_settings import MemSettings
 from .null_syncer import NullSyncer
 from .runner import Runner
+from .stats import Stats
 
 try:
     import pkg_resources
@@ -21,6 +23,15 @@ except Exception:
 
 __all__ = ['main']
 
+
+PRIVATE_NETS = (
+    IPNetwork('10.0.0.0/8'),
+    IPNetwork('127.0.0.0/8'),
+    IPNetwork('169.254.0.0/16'),
+    IPNetwork('172.16.0.0/12'),
+    IPNetwork('192.0.2.0/24'),
+    IPNetwork('192.168.0.0/16'),
+)
 
 ARG_DEFAULTS = (
     ('conn_threshold', 100),
@@ -73,11 +84,15 @@ def build_runner(**kwargs):
     logger = logging.getLogger(__name__)
 
     syncer = NullSyncer()
+    settings = MemSettings()
     if args.get('redis_url', ''):
         from .redis_syncer import RedisSyncer
         syncer = RedisSyncer(
             logger, args['sync_channel'], conn_url=args['redis_url']
         )
+
+        from .redis_settings import RedisSettings
+        settings = RedisSettings(conn_url=args['redis_url'])
 
     src_ign = None
     dst_ign = None
@@ -87,20 +102,27 @@ def build_runner(**kwargs):
 
     for src_item in args['src_ignore_cidrs']:
         if src_item == 'private':
-            src_ign = (src_ign or ()) + Conntracker.PRIVATE_NETS
+            src_ign = (src_ign or ()) + PRIVATE_NETS
             continue
         src_ign = (src_ign or ()) + (IPNetwork(src_item),)
 
     for dst_item in args['dst_ignore_cidrs']:
         if dst_item == 'private':
-            dst_ign = (dst_ign or ()) + Conntracker.PRIVATE_NETS
+            dst_ign = (dst_ign or ()) + PRIVATE_NETS
             continue
         dst_ign = (dst_ign or ()) + (IPNetwork(dst_item),)
 
+    settings.ping()
     syncer.ping()
+
+    for net in src_ign:
+        settings.add_ignore_src(net)
+
+    for net in dst_ign:
+        settings.add_ignore_dst(net)
+
     conntracker = Conntracker(
-        logger, syncer,
-        max_size=args['max_stats_size'], src_ign=src_ign, dst_ign=dst_ign
+        logger, syncer, settings, Stats(max_size=args['max_stats_size'])
     )
 
     return Runner(conntracker, syncer, logger, **dict(args))

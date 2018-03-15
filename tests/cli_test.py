@@ -2,7 +2,11 @@ import logging
 import os
 import sys
 
-from nat_conntracker.__main__ import build_argument_parser, build_runner
+from netaddr import IPAddress
+
+from nat_conntracker.__main__ import (
+    build_argument_parser, build_runner, PRIVATE_NETS
+)
 
 
 ISPY2 = sys.version_info.major == 2
@@ -31,6 +35,7 @@ def test_build_argument_parser():
 
 
 class FakeArgs(object):
+
     def __init__(self):
         self.events = None
         self.conn_threshold = 100
@@ -51,3 +56,12 @@ def test_run_events_sample(caplog):
     assert ' begin sample' in caplog.text
     assert ' end sample' in caplog.text
     assert ' cleaning up' in caplog.text
+
+
+def test_private_nets():
+    assert len(PRIVATE_NETS) > 0
+    covers_local = False
+    for net in PRIVATE_NETS:
+        if IPAddress('10.10.0.99') in net:
+            covers_local = True
+    assert covers_local
