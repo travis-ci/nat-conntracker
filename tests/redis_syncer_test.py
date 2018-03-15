@@ -66,7 +66,7 @@ def test_redis_syncer_sub(syncer, monkeypatch):
 
 
 def test_redis_syncer_ping(syncer):
-    assert syncer.ping() == 'PONG'
+    assert syncer.ping() == b'PONG'
 
 
 def test_redis_syncer_handle_message(syncer):

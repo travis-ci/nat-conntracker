@@ -29,9 +29,9 @@ class RedisSettings(object):
 
     def _get_networks(self, key):
         return [
-            IPNetwork(s) for s in
+            IPNetwork(s.decode('utf-8')) for s in
             filter(
-                lambda s: s.strip() != '',
+                lambda s: s.strip() != b'',
                 self._conn.smembers('{}:{}'.format(self._namespace, key))
             )
         ]

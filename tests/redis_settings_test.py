@@ -14,7 +14,7 @@ def test_redis_settings_init(settings):
 
 
 def test_redis_settings_ping(settings):
-    assert settings.ping() == 'PONG'
+    assert settings.ping() == b'PONG'
 
 
 def test_redis_settings_src_ignore(settings):

@@ -31,7 +31,7 @@ class FakeRedisConn(object):
         pass
 
     def ping(self):
-        return 'PONG'
+        return b'PONG'
 
     def smembers(self, key):
         return self._sets.get(key, [])
@@ -39,5 +39,5 @@ class FakeRedisConn(object):
     def sadd(self, key, value):
         if not key in self._sets:
             self._sets[key] = set()
-        self._sets[key].add(value)
+        self._sets[key].add(str(value).encode('utf-8'))
         return len(self._sets[key])
