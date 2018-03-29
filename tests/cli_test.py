@@ -2,7 +2,7 @@ import logging
 import os
 import sys
 
-from netaddr import IPAddress
+from ipaddress import ip_address
 
 from nat_conntracker.__main__ import (
     build_argument_parser, build_runner, PRIVATE_NETS
@@ -62,6 +62,6 @@ def test_private_nets():
     assert len(PRIVATE_NETS) > 0
     covers_local = False
     for net in PRIVATE_NETS:
-        if IPAddress('10.10.0.99') in net:
+        if ip_address('10.10.0.99') in net:
             covers_local = True
     assert covers_local

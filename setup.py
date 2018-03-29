@@ -29,7 +29,6 @@ def main():
         ],
         install_requires=[
             'cachetools>=2.0',
-            'netaddr>=0.7',
             'redis>=2.10'
         ],
         tests_require=[

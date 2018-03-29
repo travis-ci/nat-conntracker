@@ -1,4 +1,4 @@
-from netaddr import IPNetwork
+from ipaddress import ip_network
 
 
 __all__ = ['MemSettings']
@@ -22,7 +22,7 @@ class MemSettings(object):
         return list(self._settings['dst_ignore'])
 
     def add_ignore_src(self, src):
-        self._settings['src_ignore'].add(IPNetwork(str(src)))
+        self._settings['src_ignore'].add(ip_network(str(src)))
 
     def add_ignore_dst(self, dst):
-        self._settings['dst_ignore'].add(IPNetwork(str(dst)))
+        self._settings['dst_ignore'].add(ip_network(str(dst)))

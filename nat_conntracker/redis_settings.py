@@ -1,6 +1,7 @@
+from ipaddress import ip_network
+
 import redis
 from cachetools.func import ttl_cache
-from netaddr import IPNetwork
 
 
 __all__ = ['RedisSettings']
@@ -32,7 +33,7 @@ class RedisSettings(object):
 
     def _get_networks(self, key):
         return [
-            IPNetwork(s.decode('utf-8')) for s in
+            ip_network(s.decode('utf-8')) for s in
             filter(
                 lambda s: s.strip() != b'',
                 self._conn.smembers('{}:{}'.format(self._namespace, key))

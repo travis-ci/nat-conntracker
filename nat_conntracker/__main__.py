@@ -5,8 +5,7 @@ import os
 import sys
 
 from urllib.parse import unquote_plus
-
-from netaddr import IPNetwork
+from ipaddress import ip_network
 
 from .conntracker import Conntracker
 from .mem_settings import MemSettings
@@ -25,12 +24,12 @@ __all__ = ['main']
 
 
 PRIVATE_NETS = (
-    IPNetwork('10.0.0.0/8'),
-    IPNetwork('127.0.0.0/8'),
-    IPNetwork('169.254.0.0/16'),
-    IPNetwork('172.16.0.0/12'),
-    IPNetwork('192.0.2.0/24'),
-    IPNetwork('192.168.0.0/16'),
+    ip_network('10.0.0.0/8'),
+    ip_network('127.0.0.0/8'),
+    ip_network('169.254.0.0/16'),
+    ip_network('172.16.0.0/12'),
+    ip_network('192.0.2.0/24'),
+    ip_network('192.168.0.0/16'),
 )
 
 ARG_DEFAULTS = (
@@ -106,13 +105,13 @@ def build_runner(**kwargs):
         if src_item == 'private':
             src_ign = (src_ign or ()) + PRIVATE_NETS
             continue
-        src_ign = (src_ign or ()) + (IPNetwork(src_item),)
+        src_ign = (src_ign or ()) + (ip_network(src_item),)
 
     for dst_item in args['dst_ignore_cidrs']:
         if dst_item == 'private':
             dst_ign = (dst_ign or ()) + PRIVATE_NETS
             continue
-        dst_ign = (dst_ign or ()) + (IPNetwork(dst_item),)
+        dst_ign = (dst_ign or ()) + (ip_network(dst_item),)
 
     settings.ping()
     syncer.ping()
