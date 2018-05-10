@@ -1,5 +1,4 @@
 cachetools>=2.0
-netaddr>=0.7
 redis>=2.10
 
 codecov>=2.0

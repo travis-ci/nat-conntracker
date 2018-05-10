@@ -1,7 +1,6 @@
 import logging
 
 import pytest
-from netaddr import IPAddress
 
 from nat_conntracker.conntracker import Conntracker
 from nat_conntracker.flow_parser import Flow

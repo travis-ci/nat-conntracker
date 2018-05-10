@@ -1,8 +1,7 @@
 import socket
 
+from ipaddress import ip_address
 from threading import Thread
-
-from netaddr import IPAddress
 
 from .flow_parser import FlowParser
 
@@ -57,8 +56,8 @@ class Conntracker(object):
             self._logger.debug('skipping flow without src dst')
             return
 
-        src_addr = IPAddress(src.host)
-        dst_addr = IPAddress(dst.host)
+        src_addr = ip_address(src.host)
+        dst_addr = ip_address(dst.host)
 
         for ign in self._settings.dst_ignore():
             if dst_addr in ign:

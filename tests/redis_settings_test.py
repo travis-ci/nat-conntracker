@@ -1,5 +1,6 @@
+from ipaddress import ip_network
+
 import pytest
-from netaddr import IPNetwork
 
 from nat_conntracker.redis_settings import RedisSettings
 
@@ -19,9 +20,9 @@ def test_redis_settings_ping(settings):
 
 def test_redis_settings_src_ignore(settings):
     settings.add_ignore_src('123.145.0.0/16')
-    assert IPNetwork('123.145.0.0/16') in settings.src_ignore()
+    assert ip_network('123.145.0.0/16') in settings.src_ignore()
 
 
 def test_redis_settings_dst_ignore(settings):
     settings.add_ignore_dst('167.189.0.0/16')
-    assert IPNetwork('167.189.0.0/16') in settings.dst_ignore()
+    assert ip_network('167.189.0.0/16') in settings.dst_ignore()
