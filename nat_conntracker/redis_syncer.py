@@ -3,12 +3,10 @@ import time
 
 import redis
 
-
 __all__ = ['RedisSyncer']
 
 
 class RedisSyncer(object):
-
     def __init__(self, logger, channel, conn_url='redis://localhost:6379/0'):
         self._logger = logger
         self._channel = channel
@@ -22,8 +20,7 @@ class RedisSyncer(object):
                 'src': src,
                 'dst': dst,
                 'count': count
-            })
-        )
+            }))
 
     def sub(self, interval=0.01, is_done=None):
         is_done = is_done if is_done is not None else lambda: False
@@ -43,8 +40,7 @@ class RedisSyncer(object):
             msg = json.loads(message['data'].decode('utf-8'))
             self._logger.warn(
                 ('over threshold={threshold} src={src} dst={dst} '
-                 'count={count} source=sync').format(**msg)
-            )
+                 'count={count} source=sync').format(**msg))
         except Exception:
             self._logger.exception('failed to handle message')
 

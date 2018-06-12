@@ -1,12 +1,10 @@
 from collections import Counter, OrderedDict
 from threading import Lock
 
-
 __all__ = ['Stats']
 
 
 class Stats(object):
-
     def __init__(self, max_size=1000):
         self.max_size = max_size
         self.counter = Counter()
@@ -14,9 +12,8 @@ class Stats(object):
         self._lock = Lock()
 
     def __repr__(self):
-        return '<{} max_size={!r}>'.format(
-            self.__class__.__name__, self.max_size
-        )
+        return '<{} max_size={!r}>'.format(self.__class__.__name__,
+                                           self.max_size)
 
     def top(self, n=10):
         try:

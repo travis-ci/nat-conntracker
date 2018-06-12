@@ -1,11 +1,9 @@
 import time
 
-
 __all__ = ['NullSyncer']
 
 
 class NullSyncer(object):
-
     def __init__(self, *_, **__):
         pass
 

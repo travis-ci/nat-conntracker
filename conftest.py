@@ -19,7 +19,6 @@ def no_redis_from_url(monkeypatch):
 
 
 class FakeRedisConn(object):
-
     def __init__(self, url):
         self.url = url
         self._sets = {}

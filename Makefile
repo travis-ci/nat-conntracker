@@ -12,7 +12,7 @@ PYTHON ?= python3
 TESTDATA := tests/data/conntrack-events-sample.xml
 
 .PHONY: all
-all: clean deps lint coverage
+all: clean deps fmt coverage
 
 .PHONY: clean
 clean:
@@ -22,9 +22,9 @@ clean:
 deps: $(TESTDATA)
 	$(PIP) install -r requirements.txt
 
-.PHONY: lint
-lint:
-	$(PYTHON) setup.py flake8
+.PHONY: fmt
+fmt:
+	yapf -i -vv $(shell git ls-files '*.py') bin/nat-conntracker
 
 .PHONY: install
 install:

@@ -3,12 +3,10 @@ import time
 
 from threading import Thread
 
-
 __all__ = ['Runner']
 
 
 class Runner(object):
-
     def __init__(self, conntracker, syncer, logger, **args):
         self._conntracker = conntracker
         self._syncer = syncer
@@ -23,13 +21,11 @@ class Runner(object):
 
         try:
             signal.signal(signal.SIGUSR1, self._conntracker.dump_state)
-            self._logger.info(
-                'entering sample loop '
-                'threshold={} top_n={} eval_interval={}'.format(
-                    self._args['conn_threshold'], self._args['top_n'],
-                    self._args['eval_interval']
-                )
-            )
+            self._logger.info('entering sample loop '
+                              'threshold={} top_n={} eval_interval={}'.format(
+                                  self._args['conn_threshold'],
+                                  self._args['top_n'],
+                                  self._args['eval_interval']))
             self._run_sample_loop()
         except KeyboardInterrupt:
             self._logger.warn('interrupt')
@@ -37,16 +33,15 @@ class Runner(object):
             signal.signal(signal.SIGUSR1, signal.SIG_IGN)
             self._logger.info('cleaning up')
             self._done = True
-            self._conntracker.sample(
-                self._args['conn_threshold'], self._args['top_n']
-            )
+            self._conntracker.sample(self._args['conn_threshold'],
+                                     self._args['top_n'])
+            self._conntracker.cleanup()
             self._join()
 
     def _run_sample_loop(self):
         while True:
-            self._conntracker.sample(
-                self._args['conn_threshold'], self._args['top_n']
-            )
+            self._conntracker.sample(self._args['conn_threshold'],
+                                     self._args['top_n'])
             nextloop = time.time() + self._args['eval_interval']
             while time.time() < nextloop:
                 self._join()
@@ -77,8 +72,7 @@ class Runner(object):
     def _handle(self):
         try:
             self._conntracker.handle(
-                self._args['events'], is_done=self._is_done
-            )
+                self._args['events'], is_done=self._is_done)
         except Exception:
             self._logger.exception('breaking out of handle wrap')
         finally:

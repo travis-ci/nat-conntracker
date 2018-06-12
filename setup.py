@@ -23,30 +23,19 @@ def main():
         url='https://github.com/travis-ci/nat-conntracker',
         use_scm_version=True,
         packages=['nat_conntracker'],
-        setup_requires=[
-            'pytest-runner>=4.0',
-            'setuptools_scm>=1.15'
-        ],
-        install_requires=[
-            'cachetools>=2.0',
-            'redis>=2.10'
-        ],
+        setup_requires=['pytest-runner>=4.0', 'setuptools_scm>=1.15'],
+        install_requires=['cachetools>=2.0', 'redis>=2.10'],
         tests_require=[
-            'codecov>=2.0',
-            'flake8>=3.5',
-            'pytest>=3.4',
-            'pytest-cov>=2.0',
-            'pytest-runner>=4.0'
+            'codecov>=2.0', 'pytest-cov>=2.0', 'pytest-runner>=4.0',
+            'pytest>=3.4', 'yapf>=0.22'
         ],
         entry_points={
-            'console_scripts': [
-                'nat-conntracker=nat_conntracker.__main__:main'
-            ]
+            'console_scripts':
+            ['nat-conntracker=nat_conntracker.__main__:main']
         },
         platforms=['any'],
         zip_safe=False,
-        python_requires='>=3.5'
-    )
+        python_requires='>=3.5')
     return 0
 
 

@@ -9,9 +9,7 @@ import pytest
 @pytest.fixture
 def syncer():
     return RedisSyncer(
-        logging.getLogger(__name__),
-        'nat-conntracker-tests:sync'
-    )
+        logging.getLogger(__name__), 'nat-conntracker-tests:sync')
 
 
 def test_redis_syncer_init(syncer):
@@ -41,7 +39,6 @@ def test_redis_syncer_pub(syncer, monkeypatch):
 
 
 class MockPubSubConn(object):
-
     def __init__(self):
         self.subscriptions = None
 
@@ -71,13 +68,16 @@ def test_redis_syncer_ping(syncer):
 
 def test_redis_syncer_handle_message(syncer):
     assert syncer._handle_message({'type': 'not-a-message'}) is None
-    bogus = syncer._handle_message(
-        {'type': 'message', 'data': '{"bogus":true}'}
-    )
+    bogus = syncer._handle_message({
+        'type': 'message',
+        'data': '{"bogus":true}'
+    })
     assert bogus is None
 
     ok = syncer._handle_message({
-        'type': 'message',
-        'data': b'{"threshold":5,"src":"10.9.8.7","dst":"1.3.3.7","count":40}'
+        'type':
+        'message',
+        'data':
+        b'{"threshold":5,"src":"10.9.8.7","dst":"1.3.3.7","count":40}'
     })
     assert ok is None
