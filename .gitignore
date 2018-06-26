@@ -3,7 +3,6 @@
 .eggs/
 .pytest_cache/
 .venv/
-.venv3/
 build/
 dist/
 htmlcov/

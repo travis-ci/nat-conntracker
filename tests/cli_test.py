@@ -4,10 +4,8 @@ import sys
 
 from ipaddress import ip_address
 
-from nat_conntracker.__main__ import (
-    build_argument_parser, build_runner, PRIVATE_NETS
-)
-
+from nat_conntracker.__main__ import (build_argument_parser, build_runner,
+                                      PRIVATE_NETS)
 
 ISPY2 = sys.version_info.major == 2
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -19,10 +17,7 @@ def test_build_argument_parser():
     assert parser is not None
 
     args = parser.parse_args([
-        '--top-n=4',
-        '-S', '499',
-        '--log-file', '%2Fhuh%2Fwat.log',
-        '-I24',
+        '--top-n=4', '-S', '499', '--log-file', '%2Fhuh%2Fwat.log', '-I24',
         '--include-privnets'
     ])
 
@@ -35,7 +30,6 @@ def test_build_argument_parser():
 
 
 class FakeArgs(object):
-
     def __init__(self):
         self.events = None
         self.conn_threshold = 100
@@ -45,8 +39,7 @@ class FakeArgs(object):
 
 def test_run_events_sample(caplog):
     events = open(
-        os.path.join(HERE, 'data', 'conntrack-events-sample.xml'), 'r'
-    )
+        os.path.join(HERE, 'data', 'conntrack-events-sample.xml'), 'r')
     runner = build_runner(events=events, conn_threshold=100, debug=True)
     with caplog.at_level(logging.DEBUG):
         runner.run()

@@ -2,8 +2,8 @@ cachetools>=2.0
 redis>=2.10
 
 codecov>=2.0
-flake8>=3.5
-pytest>=3.4
 pytest-cov>=2.0
 pytest-runner>=4.0
+pytest>=3.4
 setuptools_scm>=1.15
+yapf>=0.22

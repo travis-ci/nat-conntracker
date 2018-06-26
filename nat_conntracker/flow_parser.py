@@ -2,12 +2,10 @@ from collections import namedtuple
 from xml.dom.minidom import parseString as minidom_parse_string
 from xml.parsers.expat import ExpatError
 
-
 __all__ = ['FlowParser']
 
 
 class FlowParser(object):
-
     def __init__(self, conntracker, logger):
         self._conntracker = conntracker
         self._logger = logger
@@ -18,13 +16,11 @@ class FlowParser(object):
             try:
                 dom = minidom_parse_string(line)
                 for flow_node in dom.getElementsByTagName('flow'):
-                    self._conntracker.handle_flow(
-                        Flow.from_node(flow_node)
-                    )
+                    self._conntracker.handle_flow(Flow.from_node(flow_node))
             except ExpatError as experr:
-                self._logger.debug('expat error: {}'.format(experr))
+                self._logger.debug(f'expat error: {experr}')
             finally:
-                self._logger.debug('checking is_done={}'.format(is_done()))
+                self._logger.debug(f'checking is_done={is_done()}')
                 if is_done():
                     return
 
@@ -33,14 +29,11 @@ FlowAddress = namedtuple('FlowAddress', ['host', 'port'])
 
 
 class FlowMetaGeneric(object):
-
     def __init__(self):
         self.direction = ''
 
     def __repr__(self):
-        return '<{} direction={!r}>'.format(
-            self.__class__.__name__, self.direction
-        )
+        return f'<{self.__class__.__name__} direction={repr(self.direction)}>'
 
     @classmethod
     def from_node(cls, meta_node):
@@ -50,27 +43,23 @@ class FlowMetaGeneric(object):
 
 
 class FlowMetaOrigReply(object):
-
     def __init__(self):
         self.direction = ''
         self.src = None
         self.dst = None
 
     def __repr__(self):
-        return '<{} direction={!r} src={!r} dst={!r}>'.format(
-            self.__class__.__name__, self.direction, self.src, self.dst
-        )
+        return f'<{self.__class__.__name__} direction={repr(self.direction)} ' \
+                f'src={repr(self.src)} dst={repr(self.dst)}>'
 
     @classmethod
     def from_node(cls, meta_node):
         inst = cls()
         inst.direction = meta_node.getAttribute('direction')
         inst.src = FlowAddress(
-            _find_data(meta_node, 'src'), _find_data(meta_node, 'sport')
-        )
+            _find_data(meta_node, 'src'), _find_data(meta_node, 'sport'))
         inst.dst = FlowAddress(
-            _find_data(meta_node, 'dst'), _find_data(meta_node, 'dport')
-        )
+            _find_data(meta_node, 'dst'), _find_data(meta_node, 'dport'))
         return inst
 
 
@@ -82,9 +71,8 @@ class FlowMetaIndependent(object):
         self.assured = False
 
     def __repr__(self):
-        return '<{} id={!r} assured={!r}>'.format(
-            self.__class__.__name__, self.id, self.assured
-        )
+        return f'<{self.__class__.__name__} id={repr(self.id)} ' \
+                f'assured={repr(self.assured)}>'
 
     @classmethod
     def from_node(cls, meta_node):
@@ -96,15 +84,13 @@ class FlowMetaIndependent(object):
 
 
 class Flow(object):
-
     def __init__(self):
         self.flowtype = ''
         self.meta = []
 
     def __repr__(self):
-        return '<{} flowtype={!r} meta={!r}>'.format(
-            self.__class__.__name__, self.flowtype, self.meta
-        )
+        return f'<{self.__class__.__name__} flowtype={repr(self.flowtype)} ' \
+                f'meta={repr(self.meta)}>'
 
     def src_dst(self):
         for meta in self.meta:
@@ -128,10 +114,8 @@ class Flow(object):
             'original': FlowMetaOrigReply,
             'reply': FlowMetaOrigReply,
             'independent': FlowMetaIndependent
-        }.get(
-            meta_node.getAttribute('direction'),
-            FlowMetaGeneric
-        ).from_node(meta_node)
+        }.get(meta_node.getAttribute('direction'),
+              FlowMetaGeneric).from_node(meta_node)
 
 
 def _find_data(node, parent_tag, default=''):

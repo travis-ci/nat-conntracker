@@ -8,7 +8,7 @@ from nat_conntracker.flow_parser import Flow
 
 @pytest.fixture
 def empty_conntracker():
-    return Conntracker(None, None, None, None)
+    return Conntracker(None, None, None, None, None)
 
 
 def test_conntracker_init(empty_conntracker):
